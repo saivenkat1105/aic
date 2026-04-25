@@ -5,10 +5,10 @@
   <!-- import UR macro -->
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
   <!-- import ATI Axia80-M20 macro -->
-  <xacro:include filename="$(find aic_assets)/models/Axia80 M20/axia80_m20_macro.xacro"/>
-  <xacro:include filename="$(find aic_assets)/models/Camera Mount/cam_mount_macro.xacro"/>
-  <xacro:include filename="$(find aic_assets)/models/Basler Camera/basler_camera_macro.xacro"/>
-  <xacro:include filename="$(find aic_assets)/models/Robotiq Hand-E/robotiq_hande_macro.xacro"/>
+  <xacro:include filename="$(find aic_assets)/models/Axia80_M20/axia80_m20_macro.xacro"/>
+  <xacro:include filename="$(find aic_assets)/models/Camera_Mount/cam_mount_macro.xacro"/>
+  <xacro:include filename="$(find aic_assets)/models/Basler_Camera/basler_camera_macro.xacro"/>
+  <xacro:include filename="$(find aic_assets)/models/Robotiq_Hand-E/robotiq_hande_macro.xacro"/>
 
   <xacro:include filename="$(find ur_description)/urdf/inc/ur_joint_control.xacro" />
 
@@ -101,7 +101,7 @@
     safety_limits="$(arg safety_limits)"
     safety_pos_margin="$(arg safety_pos_margin)"
     safety_k_position="$(arg safety_k_position)"
-    force_abs_paths="true"
+    force_abs_paths="false"
     >
     <origin xyz="0 0 0" rpy="0 0 0" />          <!-- position robot in the world -->
   </xacro:ur_robot>
