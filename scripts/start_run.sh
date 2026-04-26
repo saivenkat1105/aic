@@ -1,5 +1,4 @@
 #!/bin/bash
-sudo chmod a+rw /dev/dri/*
 
 echo "Setting Docker as the container manager..."
 export DBX_CONTAINER_MANAGER=docker
@@ -18,6 +17,5 @@ fi
 
 echo "Entering container and starting the simulation engine..."
 # The '--' tells distrobox to pass the following command to the container's shell
-distrobox enter -r aic_eval -- /entrypoint.sh ground_truth:=true spawn_task_board:=true spawn_cable:=true gazebo
-_gui:=false launch_rviz:=false attach_cable_to_gripper:=true
+distrobox enter -r aic_eval -- /entrypoint.sh ground_truth:=true spawn_task_board:=true spawn_cable:=true gazebo_gui:=false launch_rviz:=false attach_cable_to_gripper:=true
 

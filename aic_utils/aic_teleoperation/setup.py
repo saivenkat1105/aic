@@ -21,6 +21,8 @@ setup(
         "console_scripts": [
             "cartesian_keyboard_teleop = aic_teleoperation.cartesian_keyboard_teleop:main",
             "joint_keyboard_teleop = aic_teleoperation.joint_keyboard_teleop:main",
+            "cartesian_keyboard_teleop_ssh = aic_teleoperation.cartesian_keyboard_teleop_ssh:main",
+            "joint_keyboard_teleop_ssh = aic_teleoperation.joint_keyboard_teleop_ssh:main",
         ],
     },
 )

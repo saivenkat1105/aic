@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo chmod a+rw /dev/dri/*
 
 echo "Setting Docker as the container manager..."
 export DBX_CONTAINER_MANAGER=docker
