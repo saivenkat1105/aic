@@ -445,19 +445,8 @@ For local experimentation:
 - set `ground_truth:=true` when you explicitly want TF ground truth
 - set `start_aic_engine:=false` when you want free-form scene exploration
 - tare the F/T sensor before teleop/data collection
-
-### Build-from-source mode
-
-Only do this when you need to debug or inspect the evaluation side locally.
-
-It is useful for:
-
-- understanding the controller
-- reading the adapter/scoring implementation
-- reproducing the organizer stack natively
-
-It is not useful for changing official eval behavior. Organizers evaluate against their eval component, not our modified local copy.
-
+  
+  
 ## Source-Backed Implementation Notes
 
 ### `aic_model` wrapper behavior
