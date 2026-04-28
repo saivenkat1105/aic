@@ -471,6 +471,8 @@ environments:
         build: hb0f4dca_0
       - conda: aic_model
         build: hb0f4dca_0
+      - conda: aic_utils/aic_foxglove
+        build: hb0f4dca_0
       - conda: aic_utils/aic_teleoperation
         build: hb0f4dca_0
       - conda: aic_utils/aic_training_interfaces
@@ -968,6 +970,8 @@ environments:
       - conda: aic_interfaces/aic_task_interfaces
         build: h60d57d3_0
       - conda: aic_model
+        build: h60d57d3_0
+      - conda: aic_utils/aic_foxglove
         build: h60d57d3_0
       - conda: aic_utils/aic_teleoperation
         build: h60d57d3_0
@@ -8033,6 +8037,42 @@ packages:
   - python_abi 3.12.* *_cp312
   - numpy >=1.23,<3
   license: LicenseRef-Apache-2.0
+- conda: aic_utils/aic_foxglove
+  name: ros-kilted-aic-foxglove
+  version: 0.1.0
+  build: h60d57d3_0
+  subdir: osx-arm64
+  variants:
+    target_platform: osx-arm64
+  depends:
+  - ros-kilted-rclpy
+  - ros-kilted-tf2-ros
+  - ros-kilted-visualization-msgs
+  - ros-kilted-geometry-msgs
+  - ros2-distro-mutex
+  - ros2-distro-mutex >=0.14.0,<0.15.0a0
+  - libcxx >=22
+  - python_abi 3.12.* *_cp312
+  - numpy >=1.23,<3
+- conda: aic_utils/aic_foxglove
+  name: ros-kilted-aic-foxglove
+  version: 0.1.0
+  build: hb0f4dca_0
+  subdir: linux-64
+  variants:
+    target_platform: linux-64
+  depends:
+  - ros-kilted-rclpy
+  - ros-kilted-tf2-ros
+  - ros-kilted-visualization-msgs
+  - ros-kilted-geometry-msgs
+  - ros2-distro-mutex
+  - ros2-distro-mutex >=0.14.0,<0.15.0a0
+  - libgcc >=15
+  - libgcc >=15
+  - libstdcxx >=15
+  - python_abi 3.12.* *_cp312
+  - numpy >=1.23,<3
 - conda: aic_model
   name: ros-kilted-aic-model
   version: 0.0.1
