@@ -32,6 +32,8 @@ EVAL_IMAGE="${AIC_EVAL_IMAGE:-ghcr.io/intrinsic-dev/aic/aic_eval:latest}"
 EVAL_CONTAINER="${AIC_EVAL_CONTAINER:-aic_eval}"
 DISCOVERY_TIMEOUT="${AIC_MODEL_DISCOVERY_TIMEOUT_SECONDS:-120}"
 MODEL_CONFIGURE_TIMEOUT="${AIC_MODEL_CONFIGURE_TIMEOUT_SECONDS:-120}"
+MAX_WAIT_SECONDS="${AIC_EXPERIMENT_MAX_WAIT_SECONDS:-900}"
+POLL_INTERVAL_SECONDS="${AIC_EXPERIMENT_POLL_INTERVAL_SECONDS:-2}"
 RUN_TIMESTAMP="$(date -u +"%Y%m%dT%H%M%SZ")"
 RESULTS_DIR="${AIC_RESULTS_DIR:-$HOME/aic_results}"
 RUN_RESULTS_DIR="${RESULTS_DIR}/runs/${RUN_TIMESTAMP}_${POLICY_NAME}"
@@ -84,15 +86,52 @@ echo "Starting policy ${POLICY_NAME}..."
 ) >"${MODEL_LOG}" 2>&1 &
 MODEL_PID=$!
 
-set +e
-wait "${EVAL_PID}"
-EVAL_STATUS=$?
-set -e
+echo "Waiting for scoring output at ${SCORING_FILE}"
+START_TS="$(date +%s)"
+MODEL_EXIT_NOTED=0
+
+while true; do
+  if [[ -f "${SCORING_FILE}" ]]; then
+    echo "Detected scoring file. Finalizing run..."
+    EVAL_STATUS=0
+    break
+  fi
+
+  NOW_TS="$(date +%s)"
+  ELAPSED="$((NOW_TS - START_TS))"
+  if (( ELAPSED > MAX_WAIT_SECONDS )); then
+    echo "Timed out after ${MAX_WAIT_SECONDS}s waiting for scoring output."
+    echo "Eval log: ${EVAL_LOG}"
+    echo "Model log: ${MODEL_LOG}"
+    EVAL_STATUS=124
+    break
+  fi
+
+  if ! kill -0 "${MODEL_PID}" >/dev/null 2>&1 && [[ "${MODEL_EXIT_NOTED}" -eq 0 ]]; then
+    MODEL_EXIT_NOTED=1
+    echo "Policy process exited; waiting for evaluation to finish scoring..."
+  fi
+
+  if ! kill -0 "${EVAL_PID}" >/dev/null 2>&1; then
+    set +e
+    wait "${EVAL_PID}"
+    EVAL_STATUS=$?
+    set -e
+    break
+  fi
+
+  sleep "${POLL_INTERVAL_SECONDS}"
+done
 
 if kill -0 "${MODEL_PID}" >/dev/null 2>&1; then
   kill "${MODEL_PID}" >/dev/null 2>&1 || true
 fi
 wait "${MODEL_PID}" || true
+
+if kill -0 "${EVAL_PID}" >/dev/null 2>&1; then
+  kill "${EVAL_PID}" >/dev/null 2>&1 || true
+fi
+wait "${EVAL_PID}" || true
 
 if [[ ${EVAL_STATUS} -ne 0 ]]; then
   echo "Evaluation process failed. See ${EVAL_LOG}"
