@@ -14,46 +14,46 @@
 #  limitations under the License.
 #
 
+from __future__ import annotations
+
 import os
 
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
 
 import time
-import json
-import torch
-import numpy as np
-import cv2
-import draccus
-from pathlib import Path
-from typing import Callable, Dict, Any, List
-from rclpy.node import Node
-from geometry_msgs.msg import Twist, Vector3
+from typing import TYPE_CHECKING
 
-from aic_model.policy import (
-    GetObservationCallback,
-    MoveRobotCallback,
-    Policy,
-    SendFeedbackCallback,
-)
-from aic_model_interfaces.msg import Observation
-from aic_task_interfaces.msg import Task
-
-from aic_control_interfaces.msg import (
-    MotionUpdate,
-    TrajectoryGenerationMode,
-)
-from geometry_msgs.msg import Wrench
-
-# LeRobot & Safetensors
-from lerobot.policies.act.modeling_act import ACTPolicy
-from lerobot.policies.act.configuration_act import ACTConfig
-from safetensors.torch import load_file
-from huggingface_hub import snapshot_download
+if TYPE_CHECKING:
+    import torch
+    from aic_model.policy import (
+        GetObservationCallback,
+        MoveRobotCallback,
+        SendFeedbackCallback,
+    )
+    from aic_model_interfaces.msg import Observation
+    from aic_task_interfaces.msg import Task
+    from rclpy.node import Node
 
 
-class RunACT(Policy):
-    def __init__(self, parent_node: Node):
-        super().__init__(parent_node)
+class RunACT:
+    def __init__(self, parent_node: "Node"):
+        self._parent_node = parent_node
+        self.get_logger().info("RunACT.__init__()")
+
+        # Keep module import lightweight so the lifecycle node can be discovered
+        # quickly; expensive ML imports and checkpoint loading happen in configure.
+        global cv2, np, torch
+        import cv2
+        import draccus
+        import json
+        import numpy as np
+        import torch
+        from huggingface_hub import snapshot_download
+        from lerobot.policies.act.configuration_act import ACTConfig
+        from lerobot.policies.act.modeling_act import ACTPolicy
+        from pathlib import Path
+        from safetensors.torch import load_file
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # -------------------------------------------------------------------------
@@ -132,14 +132,20 @@ class RunACT(Policy):
 
         self.get_logger().info("Normalization statistics loaded successfully.")
 
+    def get_logger(self):
+        return self._parent_node.get_logger()
+
+    def get_clock(self):
+        return self._parent_node.get_clock()
+
     @staticmethod
     def _img_to_tensor(
         raw_img,
-        device: torch.device,
+        device: "torch.device",
         scale: float,
-        mean: torch.Tensor,
-        std: torch.Tensor,
-    ) -> torch.Tensor:
+        mean: "torch.Tensor",
+        std: "torch.Tensor",
+    ) -> "torch.Tensor":
         """Converts ROS Image -> Resized -> Permuted -> Normalized Tensor."""
         # 1. Bytes to Numpy (H, W, C)
         img_np = np.frombuffer(raw_img.data, dtype=np.uint8).reshape(
@@ -166,7 +172,9 @@ class RunACT(Policy):
         # Formula: (x - mean) / std
         return (tensor - mean) / std
 
-    def prepare_observations(self, obs_msg: Observation) -> Dict[str, torch.Tensor]:
+    def prepare_observations(
+        self, obs_msg: "Observation"
+    ) -> dict[str, "torch.Tensor"]:
         """Convert ROS Observation message into dictionary of normalized tensors."""
 
         # --- Process Cameras ---
@@ -236,10 +244,10 @@ class RunACT(Policy):
 
     def insert_cable(
         self,
-        task: Task,
-        get_observation: GetObservationCallback,
-        move_robot: MoveRobotCallback,
-        send_feedback: SendFeedbackCallback,
+        task: "Task",
+        get_observation: "GetObservationCallback",
+        move_robot: "MoveRobotCallback",
+        send_feedback: "SendFeedbackCallback",
         **kwargs,
     ):
         self.policy.reset()
@@ -275,6 +283,8 @@ class RunACT(Policy):
 
             self.get_logger().info(f"Action: {action}")
 
+            from geometry_msgs.msg import Twist, Vector3
+
             twist = Twist(
                 linear=Vector3(
                     x=float(action[0]), y=float(action[1]), z=float(action[2])
@@ -294,7 +304,10 @@ class RunACT(Policy):
         self.get_logger().info("RunACT.insert_cable() exiting...")
         return True
 
-    def set_cartesian_twist_target(self, twist: Twist, frame_id: str = "base_link"):
+    def set_cartesian_twist_target(self, twist, frame_id: str = "base_link"):
+        from aic_control_interfaces.msg import MotionUpdate, TrajectoryGenerationMode
+        from geometry_msgs.msg import Vector3, Wrench
+
         motion_update_msg = MotionUpdate()
         motion_update_msg.velocity = twist
         motion_update_msg.header.frame_id = frame_id

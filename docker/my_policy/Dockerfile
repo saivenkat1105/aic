@@ -11,6 +11,7 @@ COPY aic_interfaces /ws_aic/src/aic/aic_interfaces
 COPY aic_utils /ws_aic/src/aic/aic_utils
 COPY pixi.toml pixi.lock /ws_aic/src/aic/
 COPY pixi_env_setup.sh /ws_aic/src/aic/
+COPY .models/aic_act_policy /opt/aic_act_policy
 
 # Add other dependencies
 
@@ -52,9 +53,10 @@ if should_enable_acl; then
   ZENOH_CONFIG_OVERRIDE+=';transport/auth/usrpwd/dictionary_file="/credentials.txt"'
 fi
 export ZENOH_CONFIG_OVERRIDE
+export AIC_ACT_POLICY_PATH=/opt/aic_act_policy
 echo "ZENOH_CONFIG_OVERRIDE=$ZENOH_CONFIG_OVERRIDE"
 exec pixi run --as-is ros2 run aic_model aic_model "$@"
 EOF
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["--ros-args", "-p", "policy:=aic_model.my_runACT", "-p", "use_sim_time:=true"]
+CMD ["--ros-args", "-p", "policy:=aic_model.policies.RunACTOffline", "-p", "use_sim_time:=true"]
