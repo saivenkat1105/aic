@@ -1,0 +1,11 @@
+total: 0
+trial_1:
+  tier_1:
+    score: 0
+    message: Model validation failed.
+  tier_2:
+    score: 0
+    message: Task execution failed
+  tier_3:
+    score: 0
+    message: Task execution failed
