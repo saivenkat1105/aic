@@ -58,7 +58,7 @@
         "ACTION": "MEAN_STD"
     },
     "vision_backbone": "resnet18",
-    "pretrained_backbone_weights": "ResNet18_Weights.IMAGENET1K_V1",
+    "pretrained_backbone_weights": null,
     "replace_final_stride_with_dilation": false,
     "pre_norm": false,
     "dim_model": 512,
