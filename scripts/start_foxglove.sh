@@ -8,6 +8,10 @@ echo "Applying ROS 2 overlays and Zenoh middleware..."
 echo "Linking aic_assets into ROS install path..."
 docker exec aic_eval bash -c "ln -sfn /home/user/aic/aic_assets /ws_aic/install/share/aic_assets"
 
+echo "Stopping any existing Foxglove Bridge..."
+docker exec aic_eval bash -c "pkill -f foxglove_bridge || true"
+sleep 1
+
 # Run the Foxglove bridge
 docker exec -it aic_eval bash -c "source /opt/ros/kilted/setup.bash && \
 source /ws_aic/install/setup.bash && \
