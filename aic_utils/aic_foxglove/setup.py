@@ -22,6 +22,7 @@ setup(
     entry_points={
         "console_scripts": [
             "publish_scene_markers = aic_foxglove.publish_scene_markers:main",
+            "publish_low_bandwidth_previews = aic_foxglove.publish_low_bandwidth_previews:main",
         ],
     },
 )
