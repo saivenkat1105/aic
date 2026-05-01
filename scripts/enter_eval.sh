@@ -4,6 +4,8 @@ sudo chmod a+rw /dev/dri/*
 echo "Setting Docker as the container manager..."
 export DBX_CONTAINER_MANAGER=docker
 
+docker stop aic_eval
+
 echo "Pulling the latest image..."
 docker pull ghcr.io/intrinsic-dev/aic/aic_eval:latest
 
