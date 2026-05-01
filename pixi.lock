@@ -8049,6 +8049,7 @@ packages:
   - ros-kilted-tf2-ros
   - ros-kilted-visualization-msgs
   - ros-kilted-geometry-msgs
+  - ros-kilted-sensor-msgs
   - ros2-distro-mutex
   - ros2-distro-mutex >=0.14.0,<0.15.0a0
   - libcxx >=22
@@ -8066,6 +8067,7 @@ packages:
   - ros-kilted-tf2-ros
   - ros-kilted-visualization-msgs
   - ros-kilted-geometry-msgs
+  - ros-kilted-sensor-msgs
   - ros2-distro-mutex
   - ros2-distro-mutex >=0.14.0,<0.15.0a0
   - libgcc >=15
