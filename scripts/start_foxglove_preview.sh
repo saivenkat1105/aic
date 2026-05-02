@@ -4,7 +4,9 @@ set -euo pipefail
 echo "Starting low-bandwidth Foxglove camera previews..."
 echo "Publishing compressed preview topics under /foxglove/*."
 
-docker exec -it aic_eval bash -c "source /opt/ros/kilted/setup.bash && \
+docker exec aic_eval bash -c "pkill -f 'aic_foxglove.publish_low_bandwidth_previews' || true"
+
+docker exec aic_eval bash -c "source /opt/ros/kilted/setup.bash && \
 source /ws_aic/install/setup.bash && \
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp && \
 export PYTHONPATH=/home/user/aic/aic_utils/aic_foxglove:\${PYTHONPATH:-} && \

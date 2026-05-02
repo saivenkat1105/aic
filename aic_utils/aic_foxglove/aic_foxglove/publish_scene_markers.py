@@ -5,31 +5,28 @@ from geometry_msgs.msg import Pose
 import yaml
 from tf2_ros import TransformListener, Buffer
 
+
 class SceneMarkerPublisher(Node):
     def __init__(self):
         super().__init__('publish_scene_markers')
-        
+
         # We publish to a scene_markers topic
         self.marker_pub = self.create_publisher(MarkerArray, '/scene_markers', 10)
-        
+
         # TF listener to discover active frames
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        
+
         # Exact frame-to-mesh mappings
-        # IMPORTANT: The installed aic_assets package uses SPACES in directory names.
-        # Only map the specific visual link frames, NOT model root frames.
-        self.exact_frame_meshes = {
-            'task_board/task_board_base_link': 'package://aic_assets/models/Task Board Base/base_visual.glb',
-        }
+        self.exact_frame_meshes = {}
 
         # Suffix-based mappings for dynamically named frames (e.g., cable_0/sc_plug_link)
         self.suffix_meshes = {
-            '/sc_plug_link': 'package://aic_assets/models/SC Plug/sc_plug_visual.glb',
-            '/lc_plug_link': 'package://aic_assets/models/LC Plug/lc_plug_visual.glb',
-            '/sfp_module_link': 'package://aic_assets/models/SFP Module/sfp_module_visual.glb',
+            '/sc_plug_link': 'package://aic_assets/models/SC_Plug/sc_plug_visual.glb',
+            '/lc_plug_link': 'package://aic_assets/models/LC_Plug/lc_plug_visual.glb',
+            '/sfp_module_link': 'package://aic_assets/models/SFP_Module/sfp_module_visual.glb',
         }
-        
+
         # Publish at 1 Hz (Foxglove caches meshes, so we don't need high frequency)
         self.timer = self.create_timer(1.0, self.publish_markers)
         self._logged_frames = False
@@ -46,7 +43,7 @@ class SceneMarkerPublisher(Node):
             if not frames_dict:
                 self.get_logger().info("TF frames dict empty...", throttle_duration_sec=5.0)
                 return
-            
+
             frame_names = list(frames_dict.keys())
         except Exception as e:
             self.get_logger().warning(f"Failed to parse TF frames: {e}")
@@ -87,23 +84,23 @@ class SceneMarkerPublisher(Node):
             marker.id = marker_id
             marker.type = Marker.MESH_RESOURCE
             marker.action = Marker.ADD
-            
-            # Pose is Identity — the TF frame itself defines position/orientation
+
+            # Pose is identity - the TF frame itself defines position/orientation
             marker.pose = Pose()
             marker.pose.orientation.w = 1.0
-            
+
             marker.scale.x = 1.0
             marker.scale.y = 1.0
             marker.scale.z = 1.0
-            
+
             marker.color.r = 1.0
             marker.color.g = 1.0
             marker.color.b = 1.0
             marker.color.a = 1.0
-            
+
             marker.mesh_resource = mesh_uri
             marker.mesh_use_embedded_materials = True
-            
+
             marker_array.markers.append(marker)
             marker_id += 1
 
@@ -115,6 +112,7 @@ class SceneMarkerPublisher(Node):
         else:
             self.get_logger().info("No matching frames found for scene markers.", throttle_duration_sec=5.0)
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = SceneMarkerPublisher()
@@ -125,6 +123,7 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

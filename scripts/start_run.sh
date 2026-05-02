@@ -21,6 +21,13 @@ rand_bool() {
 build_random_training_args() {
     local -n out_args="$1"
     local task_kind="${AIC_TRAINING_TASK_KIND:-random}"
+    local board_x board_y board_yaw
+    local nic_rail_min="-0.0215"
+    local nic_rail_max="0.0234"
+    local sc_rail_min="-0.0600"
+    local sc_rail_max="0.0550"
+    local mount_rail_min="-0.09425"
+    local mount_rail_max="0.09425"
 
     if [[ "$task_kind" == "random" ]]; then
         if (( RANDOM % 2 )); then
@@ -30,10 +37,12 @@ build_random_training_args() {
         fi
     fi
 
-    local board_x board_y board_yaw
-    board_x="$(rand_float 0.10 0.22)"
-    board_y="$(rand_float -0.26 -0.14)"
-    board_yaw="$(rand_float 2.95 3.33)"
+    # Mirror the organizer sample-config envelope instead of using a wider
+    # custom range. The shipped trials keep roll/pitch fixed at 0, z fixed
+    # at 1.14, and vary the board inside this observed x/y/yaw box.
+    board_x="$(rand_float 0.15 0.17)"
+    board_y="$(rand_float -0.20 0.00)"
+    board_yaw="$(rand_float 3.00 3.1415)"
 
     out_args=(
         "ground_truth:=true"
@@ -54,7 +63,7 @@ build_random_training_args() {
     if [[ "$task_kind" == "sfp" ]]; then
         local nic_idx nic_translation nic_yaw sfp_mount_idx sc_mount_idx
         nic_idx=$(( RANDOM % 5 ))
-        nic_translation="$(rand_float -0.0215 0.0234)"
+        nic_translation="$(rand_float "$nic_rail_min" "$nic_rail_max")"
         nic_yaw="$(rand_float -0.1745 0.1745)"
         sfp_mount_idx=$(( RANDOM % 2 ))
         sc_mount_idx=$(( RANDOM % 2 ))
@@ -65,17 +74,18 @@ build_random_training_args() {
             "nic_card_mount_${nic_idx}_translation:=${nic_translation}"
             "nic_card_mount_${nic_idx}_yaw:=${nic_yaw}"
             "sfp_mount_rail_${sfp_mount_idx}_present:=true"
-            "sfp_mount_rail_${sfp_mount_idx}_translation:=$(rand_float -0.09425 0.09425)"
+            "sfp_mount_rail_${sfp_mount_idx}_translation:=$(rand_float "$mount_rail_min" "$mount_rail_max")"
             "sc_mount_rail_${sc_mount_idx}_present:=true"
-            "sc_mount_rail_${sc_mount_idx}_translation:=$(rand_float -0.09425 0.09425)"
+            "sc_mount_rail_${sc_mount_idx}_translation:=$(rand_float "$mount_rail_min" "$mount_rail_max")"
         )
     elif [[ "$task_kind" == "sc" ]]; then
-        local sc_idx sc_translation nic_idx sfp_mount_idx sc_mount_idx
+        local sc_idx sc_translation nic_idx sfp_mount_idx sc_mount_idx other_sc_idx
         sc_idx=$(( RANDOM % 2 ))
-        sc_translation="$(rand_float -0.06 0.055)"
+        sc_translation="$(rand_float "$sc_rail_min" "$sc_rail_max")"
         nic_idx=$(( RANDOM % 5 ))
         sfp_mount_idx=$(( RANDOM % 2 ))
         sc_mount_idx=$(( RANDOM % 2 ))
+        other_sc_idx=$(( 1 - sc_idx ))
 
         out_args+=(
             "cable_type:=sfp_sc_cable_reversed"
@@ -83,32 +93,20 @@ build_random_training_args() {
             "sc_port_${sc_idx}_present:=true"
             "sc_port_${sc_idx}_translation:=${sc_translation}"
             "sc_port_${sc_idx}_yaw:=0.0"
+            "sc_port_${other_sc_idx}_present:=$(rand_bool)"
+            "sc_port_${other_sc_idx}_translation:=$(rand_float "$sc_rail_min" "$sc_rail_max")"
+            "sc_port_${other_sc_idx}_yaw:=0.0"
             "nic_card_mount_${nic_idx}_present:=$(rand_bool)"
             "sfp_mount_rail_${sfp_mount_idx}_present:=true"
-            "sfp_mount_rail_${sfp_mount_idx}_translation:=$(rand_float -0.09425 0.09425)"
+            "sfp_mount_rail_${sfp_mount_idx}_translation:=$(rand_float "$mount_rail_min" "$mount_rail_max")"
             "sc_mount_rail_${sc_mount_idx}_present:=true"
-            "sc_mount_rail_${sc_mount_idx}_translation:=$(rand_float -0.09425 0.09425)"
+            "sc_mount_rail_${sc_mount_idx}_translation:=$(rand_float "$mount_rail_min" "$mount_rail_max")"
         )
     else
         echo "Unknown AIC_TRAINING_TASK_KIND='${task_kind}'. Use 'random', 'sfp', or 'sc'." >&2
         exit 2
     fi
 }
-
-echo "Setting Docker as the container manager..."
-export DBX_CONTAINER_MANAGER=docker
-
-echo "Pulling the latest image..."
-docker pull ghcr.io/intrinsic-dev/aic/aic_eval:latest
-
-# Check if the container already exists. If not, create it.
-if ! distrobox list | grep -q "aic_eval"; then
-    echo "Container 'aic_eval' not found. Creating it now..."
-    # Note: Remove the --nvidia flag below if you do NOT have an NVIDIA GPU
-    distrobox create -r --nvidia -i ghcr.io/intrinsic-dev/aic/aic_eval:latest aic_eval
-else
-    echo "Container 'aic_eval' already exists. Skipping creation."
-fi
 
 launch_args=()
 build_random_training_args launch_args
@@ -117,6 +115,5 @@ echo "Starting randomized training sample..."
 printf '  %s\n' "${launch_args[@]}"
 echo "The spawned world will be exported inside the container at /tmp/aic.sdf."
 
-echo "Entering container and starting the simulation engine..."
-# The '--' tells distrobox to pass the following command to the container's shell
-distrobox enter -r aic_eval -- /entrypoint.sh "${launch_args[@]}"
+echo "Starting the simulation engine..."
+/entrypoint.sh "${launch_args[@]}"

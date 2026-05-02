@@ -3,10 +3,37 @@
 echo "Starting Foxglove Bridge as Root to bypass permissions..."
 echo "Applying ROS 2 overlays and Zenoh middleware..."
 
-# Symlink aic_assets into the ROS install path so package:// URIs resolve correctly
-# This is the same mechanism that makes the robot's ur_description meshes work.
-echo "Linking aic_assets into ROS install path..."
-docker exec aic_eval bash -c "ln -sfn /home/user/aic/aic_assets /ws_aic/install/share/aic_assets"
+echo "Preparing aic_assets package paths for Foxglove mesh asset URIs..."
+docker exec aic_eval bash -c "
+set -e
+asset_share=/ws_aic/install/share/aic_assets
+if [ ! -d \"\${asset_share}/models\" ]; then
+  ln -sfn /home/user/aic/aic_assets \"\${asset_share}\"
+fi
+
+cd \"\${asset_share}/models\"
+alias_model() {
+  source_dir=\"\$1\"
+  alias_dir=\"\$2\"
+  if [ -e \"\${alias_dir}\" ]; then
+    return
+  fi
+  if [ -e \"\${source_dir}\" ]; then
+    ln -s \"\${source_dir}\" \"\${alias_dir}\"
+  fi
+}
+
+alias_model 'Task Board Base' Task_Board_Base
+alias_model 'NIC Card Mount' NIC_Card_Mount
+alias_model 'NIC Card' NIC_Card
+alias_model 'SC Port' SC_Port
+alias_model 'LC Mount' LC_Mount
+alias_model 'SFP Mount' SFP_Mount
+alias_model 'SC Mount' SC_Mount
+alias_model 'SC Plug' SC_Plug
+alias_model 'LC Plug' LC_Plug
+alias_model 'SFP Module' SFP_Module
+"
 
 echo "Stopping any existing Foxglove Bridge..."
 docker exec aic_eval bash -c "pkill -f foxglove_bridge || true"
