@@ -24,9 +24,7 @@ echo "Starting compressed camera preview publisher in the background..."
 "${script_dir}/start_foxglove_preview.sh" &
 preview_pid=$!
 
-echo "Starting scene marker publisher in the background..."
-"${script_dir}/start_scene_markers.sh" &
-markers_pid=$!
+
 
 sleep 2
 

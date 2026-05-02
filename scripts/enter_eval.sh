@@ -1,23 +1,35 @@
 #!/bin/bash
-sudo chmod a+rw /dev/dri/*
+set -euo pipefail
+
+IMAGE="${AIC_EVAL_IMAGE:-ghcr.io/intrinsic-dev/aic/aic_eval:latest}"
+NAME="${AIC_EVAL_CONTAINER_NAME:-aic_eval}"
 
 echo "Setting Docker as the container manager..."
 export DBX_CONTAINER_MANAGER=docker
 
-docker stop aic_eval
+echo "Stopping local AIC helper processes and connections..."
+pkill -f "ros2 run aic_model aic_model" >/dev/null 2>&1 || true
+pkill -f "rmw_zenohd" >/dev/null 2>&1 || true
+pkill -f "publish_low_bandwidth_previews.py" >/dev/null 2>&1 || true
+pkill -f "publish_scene_markers.py" >/dev/null 2>&1 || true
 
-echo "Pulling the latest image..."
-docker pull ghcr.io/intrinsic-dev/aic/aic_eval:latest
-
-# Check if the container already exists. If not, create it.
-if ! distrobox list | grep -q "aic_eval"; then
-    echo "Container 'aic_eval' not found. Creating it now..."
-    # Note: Remove the --nvidia flag below if you do NOT have an NVIDIA GPU
-    distrobox create -r --nvidia -i ghcr.io/intrinsic-dev/aic/aic_eval:latest aic_eval
-else
-    echo "Container 'aic_eval' already exists. Skipping creation."
+echo "Stopping running AIC-related containers..."
+mapfile -t aic_containers < <(docker ps --format '{{.Names}}' | grep -E '(^aic_|^aic-|aic_eval|aic_model)' || true)
+if [[ ${#aic_containers[@]} -gt 0 ]]; then
+  docker stop "${aic_containers[@]}" >/dev/null 2>&1 || true
 fi
 
-echo "Entering container and starting the simulation engine..."
-# The '--' tells distrobox to pass the following command to the container's shell
-distrobox enter -r aic_eval 
+echo "Removing existing '${NAME}' instances..."
+docker stop "${NAME}" >/dev/null 2>&1 || true
+docker rm -f "${NAME}" >/dev/null 2>&1 || true
+distrobox rm -f "${NAME}" >/dev/null 2>&1 || true
+
+echo "Pulling eval image: ${IMAGE}"
+docker pull "${IMAGE}"
+
+echo "Creating fresh distrobox container: ${NAME}"
+# Note: Remove the --nvidia flag below if you do NOT have an NVIDIA GPU
+distrobox create -r --nvidia -i "${IMAGE}" "${NAME}"
+
+echo "Entering '${NAME}'..."
+distrobox enter -r "${NAME}"

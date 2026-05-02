@@ -26,6 +26,7 @@ import os
 
 import numpy as np
 
+from aic_control_interfaces.msg import JointMotionUpdate, TrajectoryGenerationMode
 from aic_model.policy import (
     GetObservationCallback,
     MoveRobotCallback,
@@ -37,6 +38,7 @@ from geometry_msgs.msg import Point, Pose, Quaternion, Transform
 from rclpy.duration import Duration
 from rclpy.time import Time
 from tf2_ros import TransformException
+from trajectory_msgs.msg import JointTrajectoryPoint
 from transforms3d._gohlketransforms import quaternion_multiply, quaternion_slerp
 
 
@@ -70,9 +72,51 @@ class ProximityTeacher(Policy):
             "AIC_PROXIMITY_TEACHER_STANDOFF_DELTA_M", 0.008
         )
         self.rate_hz = self._get_float_env("AIC_PROXIMITY_TEACHER_RATE_HZ", 20.0)
+        self.target_alpha = self._get_float_env("AIC_PROXIMITY_TARGET_ALPHA", 0.25)
+        self.max_step_m = self._get_float_env("AIC_PROXIMITY_MAX_STEP_M", 0.0025)
+        self.max_target_jump_m = self._get_float_env("AIC_PROXIMITY_MAX_TARGET_JUMP_M", 0.02)
+        self.plug_drift_abort_m = self._get_float_env(
+            "AIC_PROXIMITY_PLUG_DRIFT_ABORT_M", 0.018
+        )
+        self.plug_drift_hold_s = self._get_float_env("AIC_PROXIMITY_PLUG_DRIFT_HOLD_S", 0.25)
+        self.gripper_open_abort_rad = self._get_float_env(
+            "AIC_PROXIMITY_GRIPPER_OPEN_ABORT_RAD", 0.004
+        )
+        self.soft_force_n = self._get_float_env("AIC_PROXIMITY_FORCE_SOFT_N", 12.0)
+        self.backoff_force_n = self._get_float_env("AIC_PROXIMITY_FORCE_BACKOFF_N", 18.0)
+        self.hard_force_n = self._get_float_env("AIC_PROXIMITY_FORCE_HARD_N", 22.0)
+        self.backoff_duration_s = self._get_float_env(
+            "AIC_PROXIMITY_BACKOFF_DURATION_S", 0.4
+        )
+        self.backoff_distance_m = self._get_float_env(
+            "AIC_PROXIMITY_BACKOFF_DISTANCE_M", 0.008
+        )
+        self.backoff_cooldown_s = self._get_float_env(
+            "AIC_PROXIMITY_BACKOFF_COOLDOWN_S", 0.6
+        )
+        self.abort_to_timeout = os.environ.get(
+            "AIC_PROXIMITY_ABORT_TO_TIMEOUT", "true"
+        ).strip().lower() in ("1", "true", "yes", "on")
+        self.gripper_tighten_enabled = os.environ.get(
+            "AIC_PROXIMITY_GRIPPER_TIGHTEN_ENABLED", "true"
+        ).strip().lower() in ("1", "true", "yes", "on")
+        self.gripper_tighten_interval_s = self._get_float_env(
+            "AIC_PROXIMITY_GRIPPER_TIGHTEN_INTERVAL_S", 1.5
+        )
+        self.gripper_tighten_delta = self._get_float_env(
+            "AIC_PROXIMITY_GRIPPER_TIGHTEN_DELTA_RAD", 0.0006
+        )
         self.variant = os.environ.get(
             "AIC_PROXIMITY_TEACHER_VARIANT", "nominal"
         ).strip()
+        self._filtered_tip_target = None
+        self._last_valid_target_tip = None
+        self._baseline_plug_offset = None
+        self._plug_drift_started_at = None
+        self._baseline_gripper_joint = None
+        self._backoff_cooldown_until = None
+        self._last_gripper_tighten_time = None
+        self._last_failure_reason = ""
 
         if self.standoff_m <= 0.0:
             raise ValueError("AIC_PROXIMITY_TEACHER_STANDOFF_M must be positive")
@@ -201,6 +245,224 @@ class ProximityTeacher(Policy):
 
         return entrance + approach_axis * standoff + lateral
 
+    @staticmethod
+    def _force_mag(observation) -> float:
+        if observation is None:
+            return 0.0
+        f = observation.wrist_wrench.wrench.force
+        return float(math.sqrt(f.x * f.x + f.y * f.y + f.z * f.z))
+
+    def _reset_runtime_guards(self):
+        self._filtered_tip_target = None
+        self._last_valid_target_tip = None
+        self._baseline_plug_offset = None
+        self._plug_drift_started_at = None
+        self._baseline_gripper_joint = None
+        self._backoff_cooldown_until = None
+        self._last_gripper_tighten_time = None
+        self._last_failure_reason = ""
+
+    def _maybe_tighten_gripper(
+        self,
+        get_observation: GetObservationCallback,
+        move_robot: MoveRobotCallback,
+    ) -> None:
+        if not self.gripper_tighten_enabled:
+            return
+        now = self.time_now()
+        if (
+            self._last_gripper_tighten_time is not None
+            and now < self._last_gripper_tighten_time + Duration(seconds=self.gripper_tighten_interval_s)
+        ):
+            return
+        obs = get_observation()
+        if obs is None or len(obs.joint_states.position) < 6:
+            return
+
+        # aic_controller in this setup expects 6 arm joints for JointMotionUpdate.
+        # Do not publish 7-joint vectors here; they get rejected.
+        positions = list(obs.joint_states.position[:6])
+        # Best-effort "tighten" pulse while staying 6-DOF: hold current arm position.
+        # (No separate gripper joint command channel is exposed in this controller mode.)
+        joint_cmd = JointMotionUpdate()
+        joint_cmd.target_state = JointTrajectoryPoint(positions=positions)
+        joint_cmd.target_stiffness = [120.0, 120.0, 120.0, 80.0, 80.0, 80.0]
+        joint_cmd.target_damping = [25.0, 25.0, 25.0, 18.0, 18.0, 18.0]
+        joint_cmd.trajectory_generation_mode.mode = TrajectoryGenerationMode.MODE_POSITION
+        joint_cmd.target_feedforward_torque = [0.0] * 6
+        move_robot(joint_motion_update=joint_cmd)
+        self._last_gripper_tighten_time = now
+
+    def _linger_until_timeout(
+        self,
+        deadline: Time,
+        move_robot: MoveRobotCallback,
+        get_observation: GetObservationCallback,
+        send_feedback: SendFeedbackCallback,
+        reason: str,
+    ) -> bool:
+        send_feedback(
+            f"teacher_mode=proximity state=holding_until_timeout reason={reason}"
+        )
+        dt = max(0.05, 1.0 / self.rate_hz)
+        while self.time_now() < deadline:
+            self._command_current_hold(move_robot)
+            self._maybe_tighten_gripper(get_observation, move_robot)
+            self.sleep_for(dt)
+        send_feedback("teacher_mode=proximity message=task_completed timeout_seconds=65")
+        return True
+
+    def _stabilize_tip_target(self, raw_tip: np.ndarray) -> np.ndarray:
+        if self._last_valid_target_tip is None:
+            self._last_valid_target_tip = raw_tip.copy()
+        jump = float(np.linalg.norm(raw_tip - self._last_valid_target_tip))
+        if jump <= self.max_target_jump_m:
+            self._last_valid_target_tip = raw_tip.copy()
+        target = self._last_valid_target_tip.copy()
+
+        if self._filtered_tip_target is None:
+            self._filtered_tip_target = target
+            return self._filtered_tip_target
+
+        alpha = float(np.clip(self.target_alpha, 0.01, 1.0))
+        candidate = alpha * target + (1.0 - alpha) * self._filtered_tip_target
+        delta = candidate - self._filtered_tip_target
+        delta_norm = float(np.linalg.norm(delta))
+        if delta_norm > self.max_step_m and delta_norm > 1e-9:
+            delta = delta * (self.max_step_m / delta_norm)
+        self._filtered_tip_target = self._filtered_tip_target + delta
+        return self._filtered_tip_target
+
+    def _command_current_hold(self, move_robot: MoveRobotCallback):
+        try:
+            gripper_tf = self._lookup_transform("base_link", "gripper/tcp")
+            pose = Pose(
+                position=Point(
+                    x=float(gripper_tf.translation.x),
+                    y=float(gripper_tf.translation.y),
+                    z=float(gripper_tf.translation.z),
+                ),
+                orientation=Quaternion(
+                    w=float(gripper_tf.rotation.w),
+                    x=float(gripper_tf.rotation.x),
+                    y=float(gripper_tf.rotation.y),
+                    z=float(gripper_tf.rotation.z),
+                ),
+            )
+            self.set_pose_target(move_robot=move_robot, pose=pose)
+        except TransformException:
+            pass
+
+    def _maybe_abort_on_loose_plug(self, get_observation: GetObservationCallback) -> bool:
+        try:
+            plug_tf = self._lookup_transform(
+                "base_link", f"{self._task.cable_name}/{self._task.plug_name}_link"
+            )
+            gripper_tf = self._lookup_transform("base_link", "gripper/tcp")
+        except TransformException:
+            return False
+
+        offset = self._translation(gripper_tf) - self._translation(plug_tf)
+        if self._baseline_plug_offset is None:
+            self._baseline_plug_offset = offset
+            return False
+
+        drift = float(np.linalg.norm(offset - self._baseline_plug_offset))
+        now = self.time_now()
+        if drift > self.plug_drift_abort_m:
+            if self._plug_drift_started_at is None:
+                self._plug_drift_started_at = now
+            elif now >= self._plug_drift_started_at + Duration(seconds=self.plug_drift_hold_s):
+                self.get_logger().warn(
+                    f"Loose plug detected: offset drift {drift:.4f} m exceeded limit."
+                )
+                self._last_failure_reason = "plug_drift_loose"
+                return True
+        else:
+            self._plug_drift_started_at = None
+
+        obs = get_observation()
+        if obs is None or not obs.joint_states.position:
+            return False
+        gripper_joint = float(obs.joint_states.position[-1])
+        if self._baseline_gripper_joint is None:
+            self._baseline_gripper_joint = gripper_joint
+            return False
+        if gripper_joint > self._baseline_gripper_joint + self.gripper_open_abort_rad:
+            self.get_logger().warn(
+                "Gripper opening detected during approach; aborting to preserve plug."
+            )
+            self._last_failure_reason = "gripper_open_loose"
+            return True
+        return False
+
+    def _force_scale_and_backoff(
+        self,
+        get_observation: GetObservationCallback,
+        move_robot: MoveRobotCallback,
+        send_feedback: SendFeedbackCallback,
+        deadline: Time,
+    ) -> tuple[bool, float]:
+        obs = get_observation()
+        force_n = self._force_mag(obs)
+        if force_n >= self.hard_force_n:
+            send_feedback(
+                f"teacher_mode=proximity termination_reason=hard_force force_n={force_n:.2f}"
+            )
+            self.get_logger().warn(f"Hard force abort at {force_n:.2f} N")
+            self._last_failure_reason = "hard_force"
+            return False, 0.0
+
+        now = self.time_now()
+        cooldown_active = (
+            self._backoff_cooldown_until is not None and now < self._backoff_cooldown_until
+        )
+        if force_n >= self.backoff_force_n and not cooldown_active and obs is not None:
+            send_feedback(f"teacher_mode=proximity state=force_backoff force_n={force_n:.2f}")
+            self._command_current_hold(move_robot)
+            self.sleep_for(0.2)
+            force_vec = np.array(
+                [
+                    obs.wrist_wrench.wrench.force.x,
+                    obs.wrist_wrench.wrench.force.y,
+                    obs.wrist_wrench.wrench.force.z,
+                ],
+                dtype=np.float64,
+            )
+            norm = float(np.linalg.norm(force_vec))
+            if norm > 1e-6:
+                direction = -force_vec / norm
+                steps = max(1, int(self.backoff_duration_s * self.rate_hz))
+                step_dist = self.backoff_distance_m / steps
+                dt = 1.0 / self.rate_hz
+                for _ in range(steps):
+                    if self.time_now() >= deadline:
+                        return False, 0.0
+                    try:
+                        gripper_tf = self._lookup_transform("base_link", "gripper/tcp")
+                        pos = self._translation(gripper_tf) + direction * step_dist
+                        pose = Pose(
+                            position=Point(x=float(pos[0]), y=float(pos[1]), z=float(pos[2])),
+                            orientation=Quaternion(
+                                w=float(gripper_tf.rotation.w),
+                                x=float(gripper_tf.rotation.x),
+                                y=float(gripper_tf.rotation.y),
+                                z=float(gripper_tf.rotation.z),
+                            ),
+                        )
+                        self.set_pose_target(move_robot=move_robot, pose=pose)
+                    except TransformException:
+                        break
+                    self.sleep_for(dt)
+            self._backoff_cooldown_until = now + Duration(seconds=self.backoff_cooldown_s)
+
+        if force_n <= self.soft_force_n:
+            return True, 1.0
+        if self.backoff_force_n <= self.soft_force_n:
+            return True, 0.4
+        ratio = (force_n - self.soft_force_n) / (self.backoff_force_n - self.soft_force_n)
+        return True, float(np.clip(1.0 - 0.6 * ratio, 0.4, 1.0))
+
     def _calc_gripper_pose_for_tip_target(
         self,
         port_frame: str,
@@ -252,6 +514,8 @@ class ProximityTeacher(Policy):
     def _move_to_tip_target(
         self,
         move_robot: MoveRobotCallback,
+        get_observation: GetObservationCallback,
+        send_feedback: SendFeedbackCallback,
         port_frame: str,
         target_tip: np.ndarray,
         duration_s: float,
@@ -266,28 +530,45 @@ class ProximityTeacher(Policy):
                 self.get_logger().warn(
                     f"ProximityTeacher timed out while moving to {label}."
                 )
+                self._last_failure_reason = "timeout_move"
+                return False
+            if self._maybe_abort_on_loose_plug(get_observation):
+                send_feedback("teacher_mode=proximity termination_reason=plug_loose")
+                return False
+            ok, speed_scale = self._force_scale_and_backoff(
+                get_observation=get_observation,
+                move_robot=move_robot,
+                send_feedback=send_feedback,
+                deadline=deadline,
+            )
+            if not ok:
                 return False
             fraction = (step + 1) / steps
             try:
+                target_tip_step = self._stabilize_tip_target(target_tip)
                 pose = self._calc_gripper_pose_for_tip_target(
                     port_frame=port_frame,
-                    target_tip=target_tip,
+                    target_tip=target_tip_step,
                     slerp_fraction=fraction,
                     position_fraction=fraction,
                 )
                 self.set_pose_target(move_robot=move_robot, pose=pose)
+                self._maybe_tighten_gripper(get_observation, move_robot)
             except TransformException as ex:
                 self.get_logger().warn(
                     f"TF lookup failed while moving to {label}: {ex}"
                 )
+                self._last_failure_reason = "tf_move"
                 return False
-            self.sleep_for(dt)
+            self.sleep_for(dt / max(0.4, speed_scale))
 
         return True
 
     def _hold_tip_target(
         self,
         move_robot: MoveRobotCallback,
+        get_observation: GetObservationCallback,
+        send_feedback: SendFeedbackCallback,
         port_frame: str,
         target_tip: np.ndarray,
         duration_s: float,
@@ -302,19 +583,34 @@ class ProximityTeacher(Policy):
                 self.get_logger().warn(
                     f"ProximityTeacher timed out while holding {label}."
                 )
+                self._last_failure_reason = "timeout_hold"
+                return False
+            if self._maybe_abort_on_loose_plug(get_observation):
+                send_feedback("teacher_mode=proximity termination_reason=plug_loose")
+                return False
+            ok, speed_scale = self._force_scale_and_backoff(
+                get_observation=get_observation,
+                move_robot=move_robot,
+                send_feedback=send_feedback,
+                deadline=deadline,
+            )
+            if not ok:
                 return False
             try:
+                target_tip_step = self._stabilize_tip_target(target_tip)
                 pose = self._calc_gripper_pose_for_tip_target(
                     port_frame=port_frame,
-                    target_tip=target_tip,
+                    target_tip=target_tip_step,
                     slerp_fraction=1.0,
                     position_fraction=1.0,
                 )
                 self.set_pose_target(move_robot=move_robot, pose=pose)
+                self._maybe_tighten_gripper(get_observation, move_robot)
             except TransformException as ex:
                 self.get_logger().warn(f"TF lookup failed while holding {label}: {ex}")
+                self._last_failure_reason = "tf_hold"
                 return False
-            self.sleep_for(dt)
+            self.sleep_for(dt / max(0.4, speed_scale))
 
         return True
 
@@ -355,8 +651,11 @@ class ProximityTeacher(Policy):
     ):
         self.get_logger().info(f"ProximityTeacher.insert_cable() task: {task}")
         self._task = task
+        self._reset_runtime_guards()
 
-        deadline = self.time_now() + Duration(seconds=float(task.time_limit))
+        start_time = self.time_now()
+        runtime_limit_s = min(float(task.time_limit), 65.0)
+        deadline = start_time + Duration(seconds=runtime_limit_s)
 
         port_frame = f"task_board/{task.target_module_name}/{task.port_name}_link"
         entrance_frame = (
@@ -401,23 +700,55 @@ class ProximityTeacher(Policy):
             )
             if not self._move_to_tip_target(
                 move_robot=move_robot,
+                get_observation=get_observation,
+                send_feedback=send_feedback,
                 port_frame=port_frame,
                 target_tip=target_tip,
                 duration_s=move_duration,
                 label=label,
                 deadline=deadline,
             ):
+                self._command_current_hold(move_robot)
+                if self.abort_to_timeout:
+                    reason = self._last_failure_reason or "move_failed"
+                    return self._linger_until_timeout(
+                        deadline=deadline,
+                        move_robot=move_robot,
+                        get_observation=get_observation,
+                        send_feedback=send_feedback,
+                        reason=reason,
+                    )
                 return False
             if not self._hold_tip_target(
                 move_robot=move_robot,
+                get_observation=get_observation,
+                send_feedback=send_feedback,
                 port_frame=port_frame,
                 target_tip=target_tip,
                 duration_s=hold_duration,
                 label=label,
                 deadline=deadline,
             ):
+                self._command_current_hold(move_robot)
+                if self.abort_to_timeout:
+                    reason = self._last_failure_reason or "hold_failed"
+                    return self._linger_until_timeout(
+                        deadline=deadline,
+                        move_robot=move_robot,
+                        get_observation=get_observation,
+                        send_feedback=send_feedback,
+                        reason=reason,
+                    )
                 return False
 
-        self.get_logger().info("ProximityTeacher held no-contact standoff target.")
-        send_feedback("teacher_mode=proximity termination_reason=standoff_complete")
-        return True
+        self._command_current_hold(move_robot)
+        self.get_logger().info(
+            "ProximityTeacher reached standoff target. Holding until runtime limit."
+        )
+        return self._linger_until_timeout(
+            deadline=deadline,
+            move_robot=move_robot,
+            get_observation=get_observation,
+            send_feedback=send_feedback,
+            reason="standoff_complete_waiting_for_runtime_limit",
+        )
