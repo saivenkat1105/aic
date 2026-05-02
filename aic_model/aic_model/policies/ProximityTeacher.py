@@ -203,12 +203,13 @@ class ProximityTeacher(Policy):
 
     def _calc_gripper_pose_for_tip_target(
         self,
-        port_transform: Transform,
+        port_frame: str,
         target_tip: np.ndarray,
         slerp_fraction: float,
         position_fraction: float,
     ) -> Pose:
         """Return a TCP pose that moves the ground-truth plug tip to target_tip."""
+        port_transform = self._lookup_transform("base_link", port_frame)
         plug_tf = self._lookup_transform(
             "base_link", f"{self._task.cable_name}/{self._task.plug_name}_link"
         )
@@ -216,7 +217,8 @@ class ProximityTeacher(Policy):
 
         q_port = self._quaternion_wxyz(port_transform)
         q_plug = self._quaternion_wxyz(plug_tf)
-        q_plug_inv = (-q_plug[0], q_plug[1], q_plug[2], q_plug[3])
+        # Correct inverse for unit quaternion in (w, x, y, z) convention.
+        q_plug_inv = (q_plug[0], -q_plug[1], -q_plug[2], -q_plug[3])
         q_diff = quaternion_multiply(q_port, q_plug_inv)
 
         q_gripper = self._quaternion_wxyz(gripper_tf)
@@ -250,19 +252,25 @@ class ProximityTeacher(Policy):
     def _move_to_tip_target(
         self,
         move_robot: MoveRobotCallback,
-        port_transform: Transform,
+        port_frame: str,
         target_tip: np.ndarray,
         duration_s: float,
         label: str,
+        deadline: Time,
     ) -> bool:
         dt = 1.0 / self.rate_hz
         steps = max(1, int(duration_s * self.rate_hz))
 
         for step in range(steps):
+            if self.time_now() >= deadline:
+                self.get_logger().warn(
+                    f"ProximityTeacher timed out while moving to {label}."
+                )
+                return False
             fraction = (step + 1) / steps
             try:
                 pose = self._calc_gripper_pose_for_tip_target(
-                    port_transform=port_transform,
+                    port_frame=port_frame,
                     target_tip=target_tip,
                     slerp_fraction=fraction,
                     position_fraction=fraction,
@@ -280,18 +288,24 @@ class ProximityTeacher(Policy):
     def _hold_tip_target(
         self,
         move_robot: MoveRobotCallback,
-        port_transform: Transform,
+        port_frame: str,
         target_tip: np.ndarray,
         duration_s: float,
         label: str,
+        deadline: Time,
     ) -> bool:
         dt = 1.0 / self.rate_hz
         steps = max(1, int(duration_s * self.rate_hz))
 
         for _ in range(steps):
+            if self.time_now() >= deadline:
+                self.get_logger().warn(
+                    f"ProximityTeacher timed out while holding {label}."
+                )
+                return False
             try:
                 pose = self._calc_gripper_pose_for_tip_target(
-                    port_transform=port_transform,
+                    port_frame=port_frame,
                     target_tip=target_tip,
                     slerp_fraction=1.0,
                     position_fraction=1.0,
@@ -342,6 +356,8 @@ class ProximityTeacher(Policy):
         self.get_logger().info(f"ProximityTeacher.insert_cable() task: {task}")
         self._task = task
 
+        deadline = self.time_now() + Duration(seconds=float(task.time_limit))
+
         port_frame = f"task_board/{task.target_module_name}/{task.port_name}_link"
         entrance_frame = (
             f"task_board/{task.target_module_name}/{task.port_name}_link_entrance"
@@ -385,18 +401,20 @@ class ProximityTeacher(Policy):
             )
             if not self._move_to_tip_target(
                 move_robot=move_robot,
-                port_transform=port_transform,
+                port_frame=port_frame,
                 target_tip=target_tip,
                 duration_s=move_duration,
                 label=label,
+                deadline=deadline,
             ):
                 return False
             if not self._hold_tip_target(
                 move_robot=move_robot,
-                port_transform=port_transform,
+                port_frame=port_frame,
                 target_tip=target_tip,
                 duration_s=hold_duration,
                 label=label,
+                deadline=deadline,
             ):
                 return False
 
