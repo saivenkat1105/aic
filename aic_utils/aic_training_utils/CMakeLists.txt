@@ -15,6 +15,7 @@ install(
 install(PROGRAMS
   scripts/xacro_expander.py
   scripts/proximity_data_generator.py
+  scripts/bin_to_webp_converter.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
