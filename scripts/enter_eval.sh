@@ -21,8 +21,7 @@ fi
 
 echo "Removing existing '${NAME}' instances..."
 docker stop "${NAME}" >/dev/null 2>&1 || true
-docker rm -f "${NAME}" >/dev/null 2>&1 || true
-distrobox rm -f "${NAME}" >/dev/null 2>&1 || true
+
 
 echo "Pulling eval image: ${IMAGE}"
 docker pull "${IMAGE}"

@@ -14,6 +14,7 @@ install(
 
 install(PROGRAMS
   scripts/xacro_expander.py
+  scripts/proximity_data_generator.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
