@@ -146,3 +146,92 @@ Campaign passes when all are true:
 6. Run remaining blocks until 3000 to 5000.
 7. Run offline WebP conversion for sampled episodes.
 8. Archive manifests and logs.
+
+## 17. Dedicated Training Runtime Isolation (`aic_eval_training`)
+Use a separate runtime for large campaign generation so development work does not interfere.
+
+### Why this is required
+1. Running training and development in the same `aic_eval` instance can cause accidental process overlap.
+2. Shared mutable source trees can change training behavior mid-run.
+3. Shared ROS graph settings can create cross-talk between independent runs.
+
+### What renaming alone does and does not do
+1. Renaming to `aic_eval_training` improves operator clarity.
+2. Renaming alone does not guarantee isolation if code mounts, ROS domain, and outputs are shared.
+3. Full isolation requires independent runtime configuration, frozen code path, and separate output paths.
+
+### Isolation hard requirements
+1. Use a dedicated container/runtime instance named `aic_eval_training`.
+2. Use a dedicated frozen git worktree for training campaigns.
+3. Use dedicated training output root directories.
+4. Use dedicated ROS domain settings for training.
+5. Do not run development commands inside `aic_eval_training`.
+
+## 18. How To Set Up Full Isolation (Step-by-Step)
+### Step 1: Create a frozen training worktree
+1. From host:
+   1. `cd /home/user/aic`
+   2. `git rev-parse --short HEAD`
+   3. `git worktree add /home/user/aic_training_runner <COMMIT_SHA_OR_BRANCH>`
+2. Treat `/home/user/aic_training_runner` as read-only during campaign execution.
+
+### Step 2: Create/enter dedicated runtime
+1. Create or clone runtime/container instance named `aic_eval_training`.
+2. Ensure the runtime uses `/home/user/aic_training_runner` as its code path.
+3. Do not use your active development tree as the mounted path for training runs.
+
+### Step 3: Pin environment
+1. Keep `pixi.lock` fixed for the full campaign.
+2. Do not run dependency update commands during campaign.
+3. Record environment provenance:
+   1. Commit SHA
+   2. `pixi.lock` checksum
+   3. Date/time campaign started
+
+### Step 4: Separate ROS graph settings
+1. In all training terminals, set:
+   1. `export RMW_IMPLEMENTATION=rmw_zenoh_cpp`
+   2. `export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'`
+   3. `export ROS_DOMAIN_ID=<TRAINING_DOMAIN_ID>`
+2. Use a domain ID not used by development sessions.
+
+### Step 5: Separate data outputs
+1. Use campaign-only output root:
+   1. `/home/user/training_data/visual_motor_policy/campaign_<YYYYMMDD>_<commit_or_tag>/`
+2. Never write debug/dev data into this campaign path.
+
+### Step 6: Start training-only services
+1. Bring up services only from `aic_eval_training` runtime.
+2. Keep exactly one `/expand_xacro` service and one `/aic_model` process for that runtime.
+3. Run generator only from the frozen training worktree context.
+
+### Step 7: Protect long runs from operator actions
+1. Run campaign in a dedicated `tmux` session.
+2. Do not execute ad-hoc experiments inside this session.
+3. If experimentation is required, do it in normal `aic_eval` and separate ROS domain.
+
+### Step 8: End-of-run verification and archive
+1. Verify artifact completeness and campaign gates.
+2. Archive run manifest with:
+   1. Commit SHA
+   2. Seed ranges
+   3. Command lines
+   4. ROS domain ID
+   5. Runtime/container name
+
+## 19. Failure Modes Even With `aic_eval_training` (and Fixes)
+1. Shared source mount with dev tree:
+   1. Symptom: behavior changes after code edits.
+   2. Fix: mount/use frozen worktree only.
+2. Shared ROS domain:
+   1. Symptom: unexpected node/service collisions.
+   2. Fix: dedicated `ROS_DOMAIN_ID` for training.
+3. Shared output directory:
+   1. Symptom: mixed/corrupted campaign artifacts.
+   2. Fix: strict campaign-only output root.
+4. Dependency drift:
+   1. Symptom: same command gives different results on later days.
+   2. Fix: pin `pixi.lock`; no updates during campaign.
+5. Host resource contention:
+   1. Symptom: unstable timing and occasional timeouts.
+   2. Fix: avoid heavy concurrent workloads during large runs.
