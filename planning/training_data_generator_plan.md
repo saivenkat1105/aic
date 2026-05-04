@@ -3,49 +3,31 @@
 Last updated: 2026-05-04
 
 ## Objective
-Build a baseline training data generator for `ProximityTeacher` that:
+Run ProximityTeacher data generation with split architecture:
+1. Generator is control-plane only.
+2. `training_frame_sink.py` handles frame write + online lossless WebP conversion + bin purge.
+3. All `ros2` and `python3` commands use `pixi run -- ...`.
+4. Use `enter_new_eval.sh` once to create the first eval runtime, then `enter_eval.sh` for all additional terminals.
+5. Episode teardown follows organizer sequencing: deactivate `aic_model` -> delete `cable_0`/`task_board` -> reset joints -> next episode re-activates model before action.
+6. Lifecycle transitions use retry + long timeout guardrails to prevent transient service stalls from failing episodes.
 
-1. Randomizes scene configuration per episode.
-2. Spawns/deletes entities without `aic_engine` orchestration.
-3. Runs `/insert_cable` with `aic_model.policies.ProximityTeacher`.
-4. Records per-frame observations, actions, and metadata.
-5. Captures scoring streams and writes per-episode score artifacts.
-6. Produces reproducible experiment outputs for future ACT training.
-
-## Baseline Workflow
-1. Enter `aic_eval` container:
-   - `bash /home/user/aic/scripts/enter_eval.sh`
-2. In `aic_eval` shell #1, launch training Gazebo stack with:
-   - `ground_truth:=true`
-   - `start_aic_engine:=false`
-   - headless options as needed
-3. In `aic_eval` shell #2, run one fresh `xacro_expander.py` service with:
-   - `RMW_IMPLEMENTATION=rmw_zenoh_cpp`
-   - `source /ws_aic/install/setup.bash`
-4. In host shell #1, run one `aic_model` with `aic_model.policies.ProximityTeacher`.
-5. In eval shell #3, run generator node for `N` episodes:
-   - sample scene params
-   - delete previous entities
-   - expand xacros and spawn `task_board` + `cable_0`
-   - tare FT sensor
-   - activate lifecycle model if needed
-   - send task goal
-   - record per-frame data until result/timeout
-   - compute and save per-episode score summary
-6. After run completes, optionally post-process `.bin` images into WebP/PNG for debugging (offline).
-7. Repeat.
-
-### Baseline Run Commands (Clean Version)
-Terminal 1 (host: enter eval container):
+## Exact Setup (Eval Container Only)
+Terminal 1 (host: create fresh first eval runtime):
 ```bash
-bash /home/user/aic/scripts/enter_eval.sh
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_new_eval.sh
 ```
 
-Terminal 2 (`aic_eval` shell #1: bringup, headless):
+Terminal 2 (host: join existing eval runtime for bringup):
 ```bash
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+```
+Then run:
+```bash
+set +u
+source /ws_aic/install/setup.bash
+set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
-source /ws_aic/install/setup.bash
 
 /entrypoint.sh \
   ground_truth:=true \
@@ -56,175 +38,119 @@ source /ws_aic/install/setup.bash
   launch_rviz:=false
 ```
 
-Terminal 3 (`aic_eval` shell #2: reset + start xacro service):
+Terminal 3 (host: join existing eval runtime for xacro service):
 ```bash
-export DBX_CONTAINER_MANAGER=docker
-distrobox enter -r aic_eval
-
-
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+```
+Then run:
+```bash
+set +u
+source /ws_aic/install/setup.bash
+set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
-source /ws_aic/install/setup.bash
 
 pkill -f xacro_expander.py || true
-sleep 1
-ros2 service list | grep /expand_xacro || true
-
 python3 /home/user/aic/aic_utils/aic_training_utils/scripts/xacro_expander.py
 ```
 
-Terminal 4 (host pixi: ProximityTeacher policy):
+Terminal 4 (host: join existing eval runtime for model):
 ```bash
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+```
+Then run:
+```bash
+set +u
+source /ws_aic/install/setup.bash
+set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
+
 pixi run -- ros2 run aic_model aic_model --ros-args \
   -p use_sim_time:=true \
   -p policy:=aic_model.policies.ProximityTeacher
 ```
 
-Terminal 5 (`aic_eval` shell #3: generator with preflight):
+Terminal 5 (host: join existing eval runtime for frame sink):
 ```bash
-
-export DBX_CONTAINER_MANAGER=docker
-distrobox enter -r aic_eval
-
-
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+```
+Then run:
+```bash
+set +u
 source /ws_aic/install/setup.bash
+set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
-python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"
-/home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args \
-  -p num_episodes:=5 \
-  -p seed:=42 \
-  -p output_root:=/home/user/training_data/visual_motor_policy/debug
+
+pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/training_frame_sink.py --ros-args \
+  -p max_pending_frames:=128 \
+  -p write_workers:=2 \
+  -p convert_workers:=4 \
+  -p keep_every_nth_bin:=0 \
+  -p images_output_subdir:=images_debug
 ```
 
-Async per-episode image postprocess mode (convert to lossless WebP in background and delete `.bin` while next episodes run):
+Terminal 6 (host: join existing eval runtime for generator):
 ```bash
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+```
+Then run:
+```bash
+set +u
+source /ws_aic/install/setup.bash
+set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
+
+pixi run -- python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"
+
 /home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args \
-  -p num_episodes:=10 \
-  -p seed:=42 \
-  -p output_root:=/home/user/training_data/visual_motor_policy/debug \
-  -p postprocess_webp_after_episode:=true \
-  -p postprocess_delete_bin_after_webp:=true \
-  -p postprocess_workers:=2 \
-  -p postprocess_output_subdir:=images_debug
+  -p num_episodes:=5000 \
+  -p seed:=2200123 \
+  -p output_root:=/home/user/training_data/visual_motor_policy/training_dataset \
+  -p use_frame_sink:=true \
+  -p frame_sink_service_ns:=/training_frame_sink \
+  -p frame_sink_require_webp_done:=true \
+  -p frame_sink_flush_timeout_s:=120.0 \
+  -p deactivate_model_between_episodes:=true \
+  -p lifecycle_transition_timeout_s:=60.0 \
+  -p lifecycle_transition_retries:=3 \
+  -p reset_joints_after_episode:=true
 ```
 
-Post-processing (host pixi: convert saved `.bin` to debug images):
+## Build Step (Only After Interface/Script Changes)
+In one joined eval terminal:
 ```bash
-# Convert all episodes to lossless WebP
-pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py \
-  --run-dir /home/user/training_data/visual_motor_policy/debug/run_<timestamp> \
-  --mode all \
-  --format webp \
-  --lossless
+set +u
+source /ws_aic/install/setup.bash
+set -u
+export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
-# Convert every 10th episode only
-pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py \
-  --run-dir /home/user/training_data/visual_motor_policy/debug/run_<timestamp> \
-  --mode every_n \
-  --every-n 10 \
-  --format webp \
-  --lossless
+pixi run -- colcon build --packages-up-to aic_training_interfaces aic_training_utils
+source install/setup.bash
 ```
 
-If `aic_description` lookup fails, verify xacro server environment:
-```bash
-pgrep -af xacro_expander.py
-for p in $(pgrep -f xacro_expander.py); do
-  echo "PID=$p"
-  tr '\0' '\n' < /proc/$p/environ | grep '^AMENT_PREFIX_PATH='
-done
-```
-Expected:
-`AMENT_PREFIX_PATH=/ws_aic/install:/opt/ros/kilted`
+## Expected Output Per Episode
+- `scene.json`
+- `task.json`
+- `frames.jsonl`
+- `result.json`
+- `score_summary.json`
+- `images_debug/{left,center,right}/*.webp`
+- `images/{left,center,right}/*.bin` only if retained or conversion fails
 
-### Operational Guardrails
-- Keep exactly one `aic_model` process active; duplicate `/aic_model` nodes can break lifecycle service calls.
-- Keep exactly one `/expand_xacro` provider active.
-- Prefer headless bringup (`gazebo_gui:=false`, `launch_rviz:=false`) for long dataset runs.
-- For generator runs that require joint reset via `ResetJoints`, run inside eval runtime and source `/ws_aic/install/setup.bash`.
-- Do not run generator from host `pixi run -- python3 ...` for this workflow.
-- Use `/home/user/aic/scripts/run_proximity_generator_eval.sh` to enforce preflight import checks and fail fast.
-- Do not run `xacro_expander.py` with pixi. Run it in `aic_eval` after sourcing `/ws_aic/install/setup.bash`, otherwise `aic_description` is not discoverable.
-- Keep online data generation as `.bin` only for throughput. Convert debug images offline.
-
-## Data To Record
-### Frame-level
-- Tri-camera images + camera infos
-- joint states
-- controller state
-- wrist wrench
-- task fields
-- latest command action (`pose_commands` or `joint_commands`)
-- image quality metrics (brightness/contrast estimate)
-- action latency estimate
-
-### Episode-level
-- sampled scene manifest
-- task used
-- action result message and status
-- timing, frame count
-- contact events and force peaks
-- insertion events
-- TF-derived distances (initial/final plug-to-port)
-- score summary fields
-- run provenance (`seed`, `git commit`, generator version)
-
-## Scoring Artifact Notes
-- Generator subscribes to scoring streams (`/scoring/tf`, `/scoring/tf_static`, `/scoring/insertion_event`, contacts, wrench).
-- Baseline writes `score_summary.json` per episode with a local score estimate and raw scoring signals.
-- These score artifacts are for training analytics and checkpoint selection.
-
-## Output Layout
-- `<output_root>/run_<timestamp>/manifest.json`
-- `<output_root>/run_<timestamp>/episodes/episode_000001/`
-  - `task.json`
-  - `scene.json`
-  - `frames.jsonl`
-  - `score_summary.json`
-  - `result.json`
-  - `images/{left,center,right}/*.bin`
-  - `images_debug/{left,center,right}/*.webp` (optional, generated by post-process converter)
-
-## Async Postprocess Parameters
-- `postprocess_webp_after_episode` (bool, default `false`):
-  - If `true`, schedule background conversion right after each episode finishes writing.
-- `postprocess_delete_bin_after_webp` (bool, default `true`):
-  - If `true`, delete per-frame `.bin` after successful `.webp` write.
-- `postprocess_workers` (int, default `2`):
-  - Number of background postprocess threads.
-- `postprocess_output_subdir` (string, default `images_debug`):
-  - Per-episode folder for converted images.
-
-Behavior:
-- Episode `k+1` starts immediately while episode `k` image conversion/deletion runs in background.
-- Generator waits for all queued background jobs before exiting.
+## Hard Guardrails
+1. Always start with `enter_new_eval.sh` once, then only `enter_eval.sh` for additional terminals.
+2. Use `pixi run --` for every `ros2` and `python3` command.
+3. Keep exactly one `/expand_xacro` and one `/aic_model`.
+4. Keep frame sink running before generator starts.
+5. Use eval-sourced shells (`/ws_aic/install/setup.bash`) in all terminals.
+6. Keep `reset_joints_after_episode:=true` and do not bypass model deactivation if you want organizer-equivalent reset behavior.
+7. If lifecycle services are unstable in a specific run, temporary fallback is `-p deactivate_model_between_episodes:=false` (reset still runs, but this is less organizer-equivalent).
 
 ## Change Log
-- 2026-05-03: Created baseline plan document and fixed required filename `training_data_generator_plan.md`.
-- 2026-05-03: Added baseline implementation script `aic_utils/aic_training_utils/scripts/proximity_data_generator.py`.
-- 2026-05-03: Updated `aic_training_utils` install/dependency metadata for the new generator script.
-- 2026-05-03: Added baseline run commands and documented per-episode output layout.
-- 2026-05-03: Added episode-level fault handling so failed episodes still emit result artifacts and run continues.
-- 2026-05-03: Validation update: added missing Pixi runtime deps `ros-kilted-ros-gz-interfaces` and `ros-kilted-simulation-interfaces`.
-- 2026-05-03: Validation fix: switched TF listener to `spin_thread=False` to avoid shutdown thread exception during smoke tests.
-- 2026-05-03: Validation finding: generator entrypoint correctly fails fast when `/expand_xacro` is unavailable (`Required service unavailable: /expand_xacro`).
-- 2026-05-03: Validation finding: workspace Pixi environment currently does not include `aic_training_utils`/`aic_bringup` as discoverable ROS packages; end-to-end launch requires eval-side bringup context.
-- 2026-05-03: Validation fix: corrected `controller_state.target_mode` parsing to `target_mode.mode` in `proximity_data_generator.py` to prevent callback crash.
-- 2026-05-03: Validation fix: replaced deprecated `get_logger().warn(...)` with `get_logger().warning(...)`.
-- 2026-05-03: Validation result: completed full one-episode run with eval-side bringup + eval-side xacro expander + host-side `aic_model`; artifacts produced (`manifest.json`, `scene.json`, `task.json`, `frames.jsonl`, `result.json`, `score_summary.json`, image bins).
-- 2026-05-03: Validation result: completed sequential 2-episode run (`num_episodes:=2`) without generator crashes; both episodes wrote full artifacts and `success:true` in `result.json`.
-- 2026-05-03: Validation note: `/expand_xacro` must be provided by a process using `RMW_IMPLEMENTATION=rmw_zenoh_cpp` and in the eval-side sourced environment to resolve `aic_description` package paths correctly.
-- 2026-05-03: Documentation fix: added explicit commands to enter `aic_eval` (`scripts/enter_eval.sh` or `distrobox enter -r aic_eval`) before bringup steps.
-- 2026-05-03: Documentation fix: switched generator/xacro commands to `pixi run -- python3 ...` to avoid missing `numpy` in system Python.
-- 2026-05-03: Documentation correction: reverted `xacro_expander.py` to eval-side Python with `/ws_aic/install/setup.bash`; pixi-side xacro service cannot resolve `aic_description`.
-- 2026-05-03: Documentation update: added explicit "kill all xacro expander services and restart fresh" commands before each run, plus verification commands for `/expand_xacro`.
-- 2026-05-03: Documentation update: replaced run section with latest validated full-loop sequence and added concrete `AMENT_PREFIX_PATH` verification for xacro server (`/ws_aic/install:/opt/ros/kilted` expected).
-- 2026-05-03: Added offline post-processing script `bin_to_webp_converter.py` to convert saved frame `.bin` images into lossless WebP/PNG (`all`, `every_n`, `episode_list` modes).
-- 2026-05-03: Simplified run instructions to reduce redundant terminal steps and separated debug image generation from live data collection.
-- 2026-05-03: Added async per-episode postprocess mode in generator: background lossless WebP conversion + optional `.bin` deletion while subsequent episodes continue.
-- 2026-05-04: Switched generator runtime instructions to eval-side execution with `/ws_aic/install/setup.bash` and added preflight `aic_engine_interfaces` import guardrail via `scripts/run_proximity_generator_eval.sh`.
+- 2026-05-04: Updated plan to enforce `enter_new_eval.sh` first, `enter_eval.sh` for additional terminals, and `pixi run --` for all `ros2`/`python3` commands.
+- 2026-05-04: Updated runtime behavior to organizer-aligned per-episode reset ordering (model deactivate, entity delete, joint reset, re-activate on next episode).
+- 2026-05-04: Added lifecycle transition robustness (`lifecycle_transition_timeout_s`, `lifecycle_transition_retries`) and explicit `deactivate_model_between_episodes` switch.

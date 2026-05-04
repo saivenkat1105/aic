@@ -21,7 +21,7 @@ export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_zenoh_cpp}"
 export ZENOH_CONFIG_OVERRIDE="${ZENOH_CONFIG_OVERRIDE:-transport/shared_memory/enabled=false}"
 
 echo "[INFO] Running preflight import check for ResetJoints..."
-python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"
+pixi run -- python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"
 
 echo "[INFO] Starting proximity_data_generator.py in eval runtime..."
-exec python3 /home/user/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py "$@"
+exec pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py "$@"

@@ -37,7 +37,16 @@ from aic_control_interfaces.msg import JointMotionUpdate, MotionUpdate
 from aic_engine_interfaces.srv import ResetJoints
 from aic_model_interfaces.msg import Observation
 from aic_task_interfaces.action import InsertCable
-from aic_training_interfaces.srv import ExpandXacro
+from aic_training_interfaces.srv import (
+    CaptureStatus,
+    ExpandXacro,
+    StartEpisodeCapture,
+    StopEpisodeCapture,
+)
+try:
+    from controller_manager_msgs.srv import SwitchController
+except ImportError:
+    SwitchController = None
 from geometry_msgs.msg import PoseStamped
 from lifecycle_msgs.msg import State, Transition
 from lifecycle_msgs.srv import ChangeState, GetState
@@ -86,6 +95,17 @@ class ProximityDataGenerator(Node):
         self.declare_parameter("postprocess_delete_bin_after_webp", True)
         self.declare_parameter("postprocess_workers", 2)
         self.declare_parameter("postprocess_output_subdir", "images_debug")
+        self.declare_parameter("use_frame_sink", True)
+        self.declare_parameter("frame_sink_service_ns", "/training_frame_sink")
+        self.declare_parameter("frame_sink_flush_timeout_s", 120.0)
+        self.declare_parameter("frame_sink_require_webp_done", True)
+        self.declare_parameter("frame_sink_enable_cameras", ["left", "center", "right"])
+        self.declare_parameter("use_controller_switch_for_reset", True)
+        self.declare_parameter("switch_controller_service", "/controller_manager/switch_controller")
+        self.declare_parameter("aic_controller_name", "aic_controller")
+        self.declare_parameter("deactivate_model_between_episodes", True)
+        self.declare_parameter("lifecycle_transition_timeout_s", 60.0)
+        self.declare_parameter("lifecycle_transition_retries", 3)
         self.declare_parameter(
             "home_joint_names",
             [
@@ -126,6 +146,40 @@ class ProximityDataGenerator(Node):
         self.postprocess_output_subdir = str(
             self.get_parameter("postprocess_output_subdir").value
         )
+        self.use_frame_sink = bool(self.get_parameter("use_frame_sink").value)
+        self.frame_sink_service_ns = str(self.get_parameter("frame_sink_service_ns").value).rstrip("/")
+        self.frame_sink_flush_timeout_s = float(
+            self.get_parameter("frame_sink_flush_timeout_s").value
+        )
+        self.frame_sink_require_webp_done = bool(
+            self.get_parameter("frame_sink_require_webp_done").value
+        )
+        self.frame_sink_enable_cameras = [
+            str(v) for v in self.get_parameter("frame_sink_enable_cameras").value
+        ]
+        self.use_controller_switch_for_reset = bool(
+            self.get_parameter("use_controller_switch_for_reset").value
+        )
+        self.switch_controller_service = str(
+            self.get_parameter("switch_controller_service").value
+        )
+        self.aic_controller_name = str(self.get_parameter("aic_controller_name").value)
+        self.deactivate_model_between_episodes = bool(
+            self.get_parameter("deactivate_model_between_episodes").value
+        )
+        self.lifecycle_transition_timeout_s = float(
+            self.get_parameter("lifecycle_transition_timeout_s").value
+        )
+        self.lifecycle_transition_retries = int(
+            self.get_parameter("lifecycle_transition_retries").value
+        )
+        if self.lifecycle_transition_retries < 1:
+            self.lifecycle_transition_retries = 1
+        if self.use_controller_switch_for_reset and SwitchController is None:
+            raise RuntimeError(
+                "use_controller_switch_for_reset is true but "
+                "controller_manager_msgs/SwitchController is not available in this runtime"
+            )
         if self.postprocess_workers < 1:
             self.postprocess_workers = 1
         self.home_joint_names = [
@@ -161,6 +215,20 @@ class ProximityDataGenerator(Node):
             ChangeState, f"/{self.model_node_name}/change_state"
         )
         self.insert_cable_client = ActionClient(self, InsertCable, "/insert_cable")
+        self.start_capture_client = self.create_client(
+            StartEpisodeCapture, f"{self.frame_sink_service_ns}/start_episode_capture"
+        )
+        self.stop_capture_client = self.create_client(
+            StopEpisodeCapture, f"{self.frame_sink_service_ns}/stop_episode_capture"
+        )
+        self.capture_status_client = self.create_client(
+            CaptureStatus, f"{self.frame_sink_service_ns}/capture_status"
+        )
+        self.switch_controller_client = None
+        if self.use_controller_switch_for_reset and SwitchController is not None:
+            self.switch_controller_client = self.create_client(
+                SwitchController, self.switch_controller_service
+            )
 
         self.create_subscription(Observation, "/observations", self._on_observation, 10)
         self.create_subscription(MotionUpdate, "/aic_controller/pose_commands", self._on_pose_cmd, 50)
@@ -264,23 +332,6 @@ class ProximityDataGenerator(Node):
 
         ep = self.current_episode
         frame_idx = ep["frame_count"]
-        episode_dir = Path(ep["episode_dir"])
-
-        left_meta = self._write_image(episode_dir, "left", frame_idx, msg.left_image)
-        center_meta = self._write_image(episode_dir, "center", frame_idx, msg.center_image)
-        right_meta = self._write_image(episode_dir, "right", frame_idx, msg.right_image)
-
-        obs_stamp = self._stamp_to_sec(msg.center_image.header.stamp)
-
-        action = None
-        action_latency_s = None
-        if self.latest_pose_cmd is not None:
-            action = {"type": "pose", **self.latest_pose_cmd}
-        elif self.latest_joint_cmd is not None:
-            action = {"type": "joint", **self.latest_joint_cmd}
-
-        if action is not None and action.get("stamp") is not None:
-            action_latency_s = float(obs_stamp - float(action["stamp"]))
 
         vx = float(msg.controller_state.tcp_velocity.linear.x)
         vy = float(msg.controller_state.tcp_velocity.linear.y)
@@ -303,62 +354,13 @@ class ProximityDataGenerator(Node):
 
         ep["vel_samples"].append(
             {
-                "t": obs_stamp,
+                "t": self._stamp_to_sec(msg.center_image.header.stamp),
                 "vx": vx,
                 "vy": vy,
                 "vz": vz,
                 "speed": speed,
             }
         )
-
-        frame = {
-            "frame_idx": frame_idx,
-            "obs_stamp": obs_stamp,
-            "action_latency_s": action_latency_s,
-            "task": ep["task"],
-            "images": {
-                "left": left_meta,
-                "center": center_meta,
-                "right": right_meta,
-            },
-            "image_stats": {
-                "left": self._image_stats(msg.left_image),
-                "center": self._image_stats(msg.center_image),
-                "right": self._image_stats(msg.right_image),
-            },
-            "wrench": {
-                "fx": float(msg.wrist_wrench.wrench.force.x),
-                "fy": float(msg.wrist_wrench.wrench.force.y),
-                "fz": float(msg.wrist_wrench.wrench.force.z),
-                "tx": float(msg.wrist_wrench.wrench.torque.x),
-                "ty": float(msg.wrist_wrench.wrench.torque.y),
-                "tz": float(msg.wrist_wrench.wrench.torque.z),
-            },
-            "joint_states": {
-                "name": list(msg.joint_states.name),
-                "position": [float(v) for v in msg.joint_states.position],
-                "velocity": [float(v) for v in msg.joint_states.velocity],
-                "effort": [float(v) for v in msg.joint_states.effort],
-            },
-            "controller_state": {
-                "target_mode": int(msg.controller_state.target_mode.mode),
-                "tcp_pose": self._pose_to_dict(msg.controller_state.tcp_pose),
-                "tcp_velocity": {
-                    "linear": {
-                        "x": vx,
-                        "y": vy,
-                        "z": vz,
-                    },
-                    "angular": {
-                        "x": float(msg.controller_state.tcp_velocity.angular.x),
-                        "y": float(msg.controller_state.tcp_velocity.angular.y),
-                        "z": float(msg.controller_state.tcp_velocity.angular.z),
-                    },
-                },
-                "tcp_error": [float(v) for v in msg.controller_state.tcp_error],
-            },
-            "action": action,
-        }
 
         if frame_idx == 0:
             ep["first_tcp_xyz"] = tcp_xyz
@@ -381,14 +383,12 @@ class ProximityDataGenerator(Node):
                 f"delta=({dx:.6f}, {dy:.6f}, {dz:.6f}) dist={dist:.6f}m"
             )
 
-        ep["frames_file"].write(json.dumps(frame) + "\n")
         ep["frame_count"] += 1
 
     # ------------------------ Episode lifecycle ------------------------
 
     def run(self) -> None:
         self._wait_for_readiness()
-        self._ensure_model_active()
 
         self._write_run_manifest()
 
@@ -401,11 +401,8 @@ class ProximityDataGenerator(Node):
 
             episode_dir = self.episodes_dir / f"episode_{i + 1:06d}"
             episode_dir.mkdir(parents=True, exist_ok=True)
-            (episode_dir / "images" / "left").mkdir(parents=True, exist_ok=True)
-            (episode_dir / "images" / "center").mkdir(parents=True, exist_ok=True)
-            (episode_dir / "images" / "right").mkdir(parents=True, exist_ok=True)
-
-            frames_file = open(episode_dir / "frames.jsonl", "w", encoding="utf-8")
+            sink_started = False
+            sink_frame_count = None
             try:
                 self._delete_entity("cable_0")
                 self._delete_entity("task_board")
@@ -421,13 +418,15 @@ class ProximityDataGenerator(Node):
                 with open(episode_dir / "task.json", "w", encoding="utf-8") as f:
                     json.dump(task_json, f, indent=2)
 
+                # Match organizer flow: model should be active for task execution.
+                self._ensure_model_active()
+
                 self.current_episode = {
                     "episode_index": i + 1,
                     "episode_dir": str(episode_dir),
                     "seed": episode_seed,
                     "task": task_json,
                     "scene": scene,
-                    "frames_file": frames_file,
                     "frame_count": 0,
                     "path_length_m": 0.0,
                     "first_tcp_xyz": None,
@@ -444,9 +443,17 @@ class ProximityDataGenerator(Node):
                 if start_dist_m is not None:
                     self.current_episode["start_plug_port_distance_m"] = start_dist_m
 
+                if self.use_frame_sink:
+                    self._start_episode_capture(episode_id=f"episode_{i + 1:06d}", episode_dir=episode_dir)
+                    sink_started = True
+
                 self._capture_window(self.pre_action_settle_s, "pre_action")
                 result = self._run_insert_cable(task)
                 self._capture_window(self.post_action_settle_s, "post_action")
+
+                if self.use_frame_sink and sink_started:
+                    sink_frame_count = self._stop_episode_capture(episode_id=f"episode_{i + 1:06d}")
+                    sink_started = False
 
                 end_dist_m = self._lookup_plug_port_distance(task)
                 if end_dist_m is not None:
@@ -470,7 +477,11 @@ class ProximityDataGenerator(Node):
                     "success": result.get("success"),
                     "message": result.get("message"),
                     "duration_s": duration_s,
-                    "frame_count": int(self.current_episode["frame_count"]),
+                    "frame_count": int(
+                        sink_frame_count
+                        if sink_frame_count is not None
+                        else self.current_episode["frame_count"]
+                    ),
                     "path_length_m": float(self.current_episode["path_length_m"]),
                 }
 
@@ -507,9 +518,21 @@ class ProximityDataGenerator(Node):
                 if self.current_episode is not None:
                     self.prev_episode_first_tcp_xyz = self.current_episode.get("first_tcp_xyz")
                     self.prev_episode_index = self.current_episode.get("episode_index")
-                frames_file.close()
+                if self.use_frame_sink and sink_started:
+                    try:
+                        self._stop_episode_capture(episode_id=f"episode_{i + 1:06d}")
+                    except Exception as exc:
+                        self.get_logger().error(f"StopEpisodeCapture failed during cleanup: {exc}")
                 if self.postprocess_webp_after_episode:
                     self._schedule_episode_postprocess(episode_dir)
+                if self.deactivate_model_between_episodes:
+                    try:
+                        self._deactivate_model_if_active()
+                    except Exception as exc:
+                        self.get_logger().error(f"Model deactivate after episode failed: {exc}")
+                # Match organizer flow by cleaning up entities before homing reset.
+                self._delete_entity("cable_0")
+                self._delete_entity("task_board")
                 if self.reset_joints_after_episode:
                     try:
                         self._reset_joints_to_home()
@@ -784,6 +807,18 @@ class ProximityDataGenerator(Node):
             (self.get_state_client, f"/{self.model_node_name}/get_state"),
             (self.change_state_client, f"/{self.model_node_name}/change_state"),
         ]
+        if self.use_frame_sink:
+            required.extend(
+                [
+                    (self.start_capture_client, f"{self.frame_sink_service_ns}/start_episode_capture"),
+                    (self.stop_capture_client, f"{self.frame_sink_service_ns}/stop_episode_capture"),
+                    (self.capture_status_client, f"{self.frame_sink_service_ns}/capture_status"),
+                ]
+            )
+        if self.switch_controller_client is not None:
+            required.append(
+                (self.switch_controller_client, self.switch_controller_service)
+            )
         for client, name in required:
             self.get_logger().info(f"Waiting for service {name}...")
             if not client.wait_for_service(timeout_sec=30.0):
@@ -794,26 +829,79 @@ class ProximityDataGenerator(Node):
             raise RuntimeError("/insert_cable action server unavailable")
 
     def _ensure_model_active(self) -> None:
-        state_resp = self._call_service(self.get_state_client, GetState.Request(), timeout_s=10.0)
-        state_id = int(state_resp.current_state.id)
+        state_id = self._get_model_state_id()
 
         if state_id == int(State.PRIMARY_STATE_UNCONFIGURED):
-            req = ChangeState.Request()
-            req.transition.id = int(Transition.TRANSITION_CONFIGURE)
-            resp = self._call_service(self.change_state_client, req, timeout_s=20.0)
-            if not resp.success:
-                raise RuntimeError("Failed to configure model lifecycle node")
-            state_id = int(
-                self._call_service(self.get_state_client, GetState.Request(), timeout_s=10.0)
-                .current_state.id
+            self._transition_model_state(
+                transition_id=int(Transition.TRANSITION_CONFIGURE),
+                transition_name="configure",
             )
+            state_id = self._get_model_state_id()
 
         if state_id == int(State.PRIMARY_STATE_INACTIVE):
-            req = ChangeState.Request()
-            req.transition.id = int(Transition.TRANSITION_ACTIVATE)
-            resp = self._call_service(self.change_state_client, req, timeout_s=20.0)
-            if not resp.success:
-                raise RuntimeError("Failed to activate model lifecycle node")
+            self._transition_model_state(
+                transition_id=int(Transition.TRANSITION_ACTIVATE),
+                transition_name="activate",
+            )
+
+    def _deactivate_model_if_active(self) -> None:
+        state_id = self._get_model_state_id()
+        if state_id == int(State.PRIMARY_STATE_ACTIVE):
+            self._transition_model_state(
+                transition_id=int(Transition.TRANSITION_DEACTIVATE),
+                transition_name="deactivate",
+            )
+
+    def _get_model_state_id(self) -> int:
+        last_err: Exception | None = None
+        for attempt in range(1, self.lifecycle_transition_retries + 1):
+            try:
+                state_resp = self._call_service(
+                    self.get_state_client,
+                    GetState.Request(),
+                    timeout_s=self.lifecycle_transition_timeout_s,
+                )
+                return int(state_resp.current_state.id)
+            except Exception as exc:
+                last_err = exc
+                self.get_logger().warn(
+                    f"GetState attempt {attempt}/{self.lifecycle_transition_retries} failed: {exc}"
+                )
+                time.sleep(0.5)
+        raise RuntimeError(f"Failed to query model lifecycle state: {last_err}")
+
+    def _transition_model_state(self, *, transition_id: int, transition_name: str) -> None:
+        req = ChangeState.Request()
+        req.transition.id = int(transition_id)
+
+        last_err: Exception | None = None
+        for attempt in range(1, self.lifecycle_transition_retries + 1):
+            try:
+                resp = self._call_service(
+                    self.change_state_client,
+                    req,
+                    timeout_s=self.lifecycle_transition_timeout_s,
+                )
+            except Exception as exc:
+                last_err = exc
+                self.get_logger().warn(
+                    f"Model {transition_name} attempt {attempt}/{self.lifecycle_transition_retries} "
+                    f"timed out or failed: {exc}"
+                )
+                time.sleep(0.5)
+                continue
+
+            if resp.success:
+                return
+
+            last_err = RuntimeError(f"Model {transition_name} returned success=false")
+            self.get_logger().warn(
+                f"Model {transition_name} attempt {attempt}/{self.lifecycle_transition_retries} "
+                "returned success=false"
+            )
+            time.sleep(0.5)
+
+        raise RuntimeError(f"Failed to {transition_name} model lifecycle node: {last_err}")
 
     def _run_insert_cable(self, task) -> dict[str, Any]:
         goal = InsertCable.Goal()
@@ -853,6 +941,36 @@ class ProximityDataGenerator(Node):
             "message": str(result.result.message),
             "feedback": feedback_msgs,
         }
+
+    def _start_episode_capture(self, episode_id: str, episode_dir: Path) -> None:
+        req = StartEpisodeCapture.Request()
+        req.episode_id = str(episode_id)
+        req.run_dir = str(self.run_dir)
+        req.episode_dir = str(episode_dir)
+        req.task_json_path = str(episode_dir / "task.json")
+        req.scene_json_path = str(episode_dir / "scene.json")
+        req.enable_cameras = list(self.frame_sink_enable_cameras)
+        resp = self._call_service(self.start_capture_client, req, timeout_s=20.0)
+        if not resp.success:
+            raise RuntimeError(f"StartEpisodeCapture failed: {resp.message}")
+
+    def _stop_episode_capture(self, episode_id: str) -> int:
+        req = StopEpisodeCapture.Request()
+        req.episode_id = str(episode_id)
+        req.flush_timeout_s = float(self.frame_sink_flush_timeout_s)
+        req.require_webp_done = bool(self.frame_sink_require_webp_done)
+        resp = self._call_service(
+            self.stop_capture_client,
+            req,
+            timeout_s=max(20.0, self.frame_sink_flush_timeout_s + 10.0),
+        )
+        if not resp.success:
+            self.get_logger().warn(
+                "StopEpisodeCapture incomplete: "
+                f"message={resp.message} pending_write={resp.pending_write} "
+                f"pending_convert={resp.pending_convert}"
+            )
+        return int(resp.written_frames)
 
     def _call_service(self, client, request, timeout_s: float = 10.0):
         future = client.call_async(request)
@@ -957,12 +1075,41 @@ class ProximityDataGenerator(Node):
             raise RuntimeError(f"FT tare failed: {resp.message}")
 
     def _reset_joints_to_home(self) -> None:
-        req = ResetJoints.Request()
-        req.joint_names = list(self.home_joint_names)
-        req.initial_positions = list(self.home_joint_positions)
-        resp = self._call_service(self.reset_joints_client, req, timeout_s=10.0)
-        if not resp.success:
-            raise RuntimeError(f"ResetJoints failed: {resp.message}")
+        if self.switch_controller_client is not None:
+            self._switch_controller(
+                activate=[],
+                deactivate=[self.aic_controller_name],
+            )
+        try:
+            req = ResetJoints.Request()
+            req.joint_names = list(self.home_joint_names)
+            req.initial_positions = list(self.home_joint_positions)
+            resp = self._call_service(self.reset_joints_client, req, timeout_s=10.0)
+            if not resp.success:
+                raise RuntimeError(f"ResetJoints failed: {resp.message}")
+        finally:
+            if self.switch_controller_client is not None:
+                self._switch_controller(
+                    activate=[self.aic_controller_name],
+                    deactivate=[],
+                )
+
+    def _switch_controller(self, *, activate: list[str], deactivate: list[str]) -> None:
+        if self.switch_controller_client is None or SwitchController is None:
+            raise RuntimeError("SwitchController client unavailable")
+        req = SwitchController.Request()
+        req.activate_controllers = list(activate)
+        req.deactivate_controllers = list(deactivate)
+        if hasattr(req, "strictness"):
+            req.strictness = int(getattr(SwitchController.Request, "BEST_EFFORT", 1))
+        if hasattr(req, "activate_asap"):
+            req.activate_asap = True
+        resp = self._call_service(self.switch_controller_client, req, timeout_s=10.0)
+        if not getattr(resp, "ok", False):
+            raise RuntimeError(
+                "SwitchController failed "
+                f"(activate={activate}, deactivate={deactivate})"
+            )
 
     # ------------------------ Geometry ------------------------
 

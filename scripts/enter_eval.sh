@@ -1,34 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
-IMAGE="${AIC_EVAL_IMAGE:-ghcr.io/intrinsic-dev/aic/aic_eval:latest}"
-NAME="${AIC_EVAL_CONTAINER_NAME:-aic_eval}"
-
-echo "Setting Docker as the container manager..."
 export DBX_CONTAINER_MANAGER=docker
 
-echo "Stopping local AIC helper processes and connections..."
-pkill -f "ros2 run aic_model aic_model" >/dev/null 2>&1 || true
-pkill -f "rmw_zenohd" >/dev/null 2>&1 || true
-pkill -f "publish_low_bandwidth_previews.py" >/dev/null 2>&1 || true
-pkill -f "publish_scene_markers.py" >/dev/null 2>&1 || true
+STATE_FILE="${AIC_EVAL_STATE_FILE:-/tmp/aic_eval_container_name}"
+NAME="${AIC_EVAL_CONTAINER_NAME:-}"
 
-echo "Stopping running AIC-related containers..."
-mapfile -t aic_containers < <(docker ps --format '{{.Names}}' | grep -E '(^aic_|^aic-|aic_eval|aic_model)' || true)
-if [[ ${#aic_containers[@]} -gt 0 ]]; then
-  docker stop "${aic_containers[@]}" >/dev/null 2>&1 || true
+if [[ -z "${NAME}" && -f "${STATE_FILE}" ]]; then
+  NAME="$(<"${STATE_FILE}")"
 fi
 
-echo "Removing existing '${NAME}' instances..."
-docker stop "${NAME}" >/dev/null 2>&1 || true
+if [[ -z "${NAME}" ]]; then
+  NAME="aic_eval"
+fi
 
-
-echo "Pulling eval image: ${IMAGE}"
-docker pull "${IMAGE}"
-
-echo "Creating fresh distrobox container: ${NAME}"
-# Note: Remove the --nvidia flag below if you do NOT have an NVIDIA GPU
-distrobox create -r --nvidia -i "${IMAGE}" "${NAME}"
-
-echo "Entering '${NAME}'..."
+echo "Entering eval container: ${NAME}"
 distrobox enter -r "${NAME}"

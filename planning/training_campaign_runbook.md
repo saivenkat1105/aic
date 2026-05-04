@@ -52,7 +52,7 @@ Pass all before starting:
 7. Disk space is sufficient for target episode count.
 8. Previous stale entities/processes are cleaned.
 
-## 8. Runtime Terminals and Commands
+## 8. Runtime Terminals and Commands (Eval Runtime)
 Terminal A (enter eval):
 1. `bash /home/user/aic/scripts/enter_eval.sh`
 
@@ -69,17 +69,24 @@ Terminal C (eval xacro):
 4. `pkill -f xacro_expander.py || true`
 5. `python3 /home/user/aic/aic_utils/aic_training_utils/scripts/xacro_expander.py`
 
-Terminal D (host model):
+Terminal D (eval model):
 1. `export RMW_IMPLEMENTATION=rmw_zenoh_cpp`
 2. `export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'`
-3. `pixi run -- ros2 run aic_model aic_model --ros-args -p use_sim_time:=true -p policy:=aic_model.policies.ProximityTeacher`
+3. `set +u; source /ws_aic/install/setup.bash; set -u`
+4. `ros2 run aic_model aic_model --ros-args -p use_sim_time:=true -p policy:=aic_model.policies.ProximityTeacher`
 
-Terminal E (eval generator, required for `aic_engine_interfaces`):
+Terminal E (eval frame sink sidecar):
+1. `source /ws_aic/install/setup.bash`
+2. `export RMW_IMPLEMENTATION=rmw_zenoh_cpp`
+3. `export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'`
+4. `python3 /home/user/aic/aic_utils/aic_training_utils/scripts/training_frame_sink.py --ros-args -p max_pending_frames:=64 -p write_workers:=2 -p convert_workers:=2 -p keep_every_nth_bin:=0 -p images_output_subdir:=images_debug`
+
+Terminal F (eval generator, required for `aic_engine_interfaces`):
 1. `source /ws_aic/install/setup.bash`
 2. `export RMW_IMPLEMENTATION=rmw_zenoh_cpp`
 3. `export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'`
 4. `python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"`
-5. `/home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args -p num_episodes:=<N> -p seed:=<S> -p output_root:=<CAMPAIGN_ROOT>`
+5. `/home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args -p num_episodes:=<N> -p seed:=<S> -p output_root:=<CAMPAIGN_ROOT> -p use_frame_sink:=true -p frame_sink_service_ns:=/training_frame_sink -p frame_sink_require_webp_done:=true`
 
 ## 9. Episode-Level Acceptance Criteria
 Every episode directory must include:
@@ -87,14 +94,14 @@ Every episode directory must include:
 2. `task.json`
 3. `frames.jsonl`
 4. `result.json`
-5. `images/left/*.bin`
-6. `images/center/*.bin`
-7. `images/right/*.bin`
+5. `images_debug/left/*.webp`
+6. `images_debug/center/*.webp`
+7. `images_debug/right/*.webp`
 
 Episode is valid if:
 1. `result.json` exists.
 2. `frames.jsonl` has at least one frame.
-3. Image entries in `frames.jsonl` resolve to existing `.bin` files.
+3. Image entries in `frames.jsonl` resolve to existing `.webp` files.
 4. No JSON parse errors in artifacts.
 
 ## 10. Score Handling Policy (Temporary Correctness Mode)

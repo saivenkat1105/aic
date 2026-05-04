@@ -10,6 +10,9 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(srv_files
   "srv/ExpandXacro.srv"
+  "srv/StartEpisodeCapture.srv"
+  "srv/StopEpisodeCapture.srv"
+  "srv/CaptureStatus.srv"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}

@@ -1,0 +1,12 @@
+string episode_id
+float64 flush_timeout_s
+bool require_webp_done
+---
+bool success
+string message
+uint32 written_frames
+uint32 converted_images
+uint32 purged_bins
+uint32 dropped_frames
+uint32 pending_write
+uint32 pending_convert

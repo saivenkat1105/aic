@@ -1,0 +1,9 @@
+string episode_id
+string run_dir
+string episode_dir
+string task_json_path
+string scene_json_path
+string[] enable_cameras
+---
+bool success
+string message
