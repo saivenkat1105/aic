@@ -27,12 +27,14 @@ import math
 import os
 import random
 import time
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import rclpy
 from aic_control_interfaces.msg import JointMotionUpdate, MotionUpdate
+from aic_engine_interfaces.srv import ResetJoints
 from aic_model_interfaces.msg import Observation
 from aic_task_interfaces.action import InsertCable
 from aic_training_interfaces.srv import ExpandXacro
@@ -48,6 +50,7 @@ from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from tf2_msgs.msg import TFMessage
 from tf2_ros import Buffer, TransformException, TransformListener
+from PIL import Image
 
 
 @dataclasses.dataclass
@@ -57,6 +60,9 @@ class EpisodeSpec:
     task_board_pose: dict[str, float]
     nic_mount_index: int
     nic_translation: float
+    nic_roll: float
+    nic_pitch: float
+    nic_yaw: float
     sfp_rail_0_translation: float
     sfp_rail_1_translation: float
     port_name: str
@@ -73,12 +79,65 @@ class ProximityDataGenerator(Node):
         self.declare_parameter("output_root", str(Path.home() / "aic_training_data"))
         self.declare_parameter("task_time_limit_s", 90)
         self.declare_parameter("model_node_name", "aic_model")
+        self.declare_parameter("reset_joints_after_episode", True)
+        self.declare_parameter("pre_action_settle_s", 5.0)
+        self.declare_parameter("post_action_settle_s", 5.0)
+        self.declare_parameter("postprocess_webp_after_episode", False)
+        self.declare_parameter("postprocess_delete_bin_after_webp", True)
+        self.declare_parameter("postprocess_workers", 2)
+        self.declare_parameter("postprocess_output_subdir", "images_debug")
+        self.declare_parameter(
+            "home_joint_names",
+            [
+                "shoulder_pan_joint",
+                "shoulder_lift_joint",
+                "elbow_joint",
+                "wrist_1_joint",
+                "wrist_2_joint",
+                "wrist_3_joint",
+            ],
+        )
+        self.declare_parameter(
+            "home_joint_positions",
+            [-0.1597, -1.3542, -1.6648, -1.6933, 1.5710, 1.4110],
+        )
 
         self.num_episodes = int(self.get_parameter("num_episodes").value)
         self.seed = int(self.get_parameter("seed").value)
         self.output_root = Path(str(self.get_parameter("output_root").value)).expanduser()
         self.task_time_limit_s = int(self.get_parameter("task_time_limit_s").value)
         self.model_node_name = str(self.get_parameter("model_node_name").value)
+        self.reset_joints_after_episode = bool(
+            self.get_parameter("reset_joints_after_episode").value
+        )
+        self.pre_action_settle_s = float(self.get_parameter("pre_action_settle_s").value)
+        self.post_action_settle_s = float(self.get_parameter("post_action_settle_s").value)
+        if self.pre_action_settle_s < 0.0:
+            self.pre_action_settle_s = 0.0
+        if self.post_action_settle_s < 0.0:
+            self.post_action_settle_s = 0.0
+        self.postprocess_webp_after_episode = bool(
+            self.get_parameter("postprocess_webp_after_episode").value
+        )
+        self.postprocess_delete_bin_after_webp = bool(
+            self.get_parameter("postprocess_delete_bin_after_webp").value
+        )
+        self.postprocess_workers = int(self.get_parameter("postprocess_workers").value)
+        self.postprocess_output_subdir = str(
+            self.get_parameter("postprocess_output_subdir").value
+        )
+        if self.postprocess_workers < 1:
+            self.postprocess_workers = 1
+        self.home_joint_names = [
+            str(v) for v in self.get_parameter("home_joint_names").value
+        ]
+        self.home_joint_positions = [
+            float(v) for v in self.get_parameter("home_joint_positions").value
+        ]
+        if len(self.home_joint_names) != len(self.home_joint_positions):
+            raise RuntimeError(
+                "home_joint_names and home_joint_positions must have the same length"
+            )
 
         random.seed(self.seed)
 
@@ -96,6 +155,7 @@ class ProximityDataGenerator(Node):
         self.spawn_entity_client = self.create_client(SpawnEntity, "/gz_server/spawn_entity")
         self.delete_entity_client = self.create_client(DeleteEntity, "/gz_server/delete_entity")
         self.tare_client = self.create_client(Trigger, "/aic_controller/tare_force_torque_sensor")
+        self.reset_joints_client = self.create_client(ResetJoints, "/scoring/reset_joints")
         self.get_state_client = self.create_client(GetState, f"/{self.model_node_name}/get_state")
         self.change_state_client = self.create_client(
             ChangeState, f"/{self.model_node_name}/change_state"
@@ -119,6 +179,15 @@ class ProximityDataGenerator(Node):
         self.current_episode: dict[str, Any] | None = None
         self.latest_pose_cmd: dict[str, Any] | None = None
         self.latest_joint_cmd: dict[str, Any] | None = None
+        self.prev_episode_first_tcp_xyz: tuple[float, float, float] | None = None
+        self.prev_episode_index: int | None = None
+        self.postprocess_executor: ThreadPoolExecutor | None = None
+        self.postprocess_futures: list[Future] = []
+        if self.postprocess_webp_after_episode:
+            self.postprocess_executor = ThreadPoolExecutor(
+                max_workers=self.postprocess_workers,
+                thread_name_prefix="episode_postprocess",
+            )
 
     # ------------------------ ROS callbacks ------------------------
 
@@ -291,6 +360,27 @@ class ProximityDataGenerator(Node):
             "action": action,
         }
 
+        if frame_idx == 0:
+            ep["first_tcp_xyz"] = tcp_xyz
+        if frame_idx == 0 and self.prev_episode_first_tcp_xyz is not None:
+            prev = self.prev_episode_first_tcp_xyz
+            dx = tcp_xyz[0] - prev[0]
+            dy = tcp_xyz[1] - prev[1]
+            dz = tcp_xyz[2] - prev[2]
+            dist = math.sqrt(dx * dx + dy * dy + dz * dz)
+            prev_ep = (
+                str(self.prev_episode_index)
+                if self.prev_episode_index is not None
+                else "unknown"
+            )
+            self.get_logger().info(
+                "Reset check transition: "
+                f"prev_episode={prev_ep} prev_first_tcp=({prev[0]:.6f}, {prev[1]:.6f}, {prev[2]:.6f}) "
+                f"current_episode={ep.get('episode_index', 'unknown')} "
+                f"current_first_tcp=({tcp_xyz[0]:.6f}, {tcp_xyz[1]:.6f}, {tcp_xyz[2]:.6f}) "
+                f"delta=({dx:.6f}, {dy:.6f}, {dz:.6f}) dist={dist:.6f}m"
+            )
+
         ep["frames_file"].write(json.dumps(frame) + "\n")
         ep["frame_count"] += 1
 
@@ -332,6 +422,7 @@ class ProximityDataGenerator(Node):
                     json.dump(task_json, f, indent=2)
 
                 self.current_episode = {
+                    "episode_index": i + 1,
                     "episode_dir": str(episode_dir),
                     "seed": episode_seed,
                     "task": task_json,
@@ -339,6 +430,7 @@ class ProximityDataGenerator(Node):
                     "frames_file": frames_file,
                     "frame_count": 0,
                     "path_length_m": 0.0,
+                    "first_tcp_xyz": None,
                     "last_tcp_xyz": None,
                     "vel_samples": [],
                     "insertion_events": [],
@@ -352,7 +444,9 @@ class ProximityDataGenerator(Node):
                 if start_dist_m is not None:
                     self.current_episode["start_plug_port_distance_m"] = start_dist_m
 
+                self._capture_window(self.pre_action_settle_s, "pre_action")
                 result = self._run_insert_cable(task)
+                self._capture_window(self.post_action_settle_s, "post_action")
 
                 end_dist_m = self._lookup_plug_port_distance(task)
                 if end_dist_m is not None:
@@ -410,9 +504,20 @@ class ProximityDataGenerator(Node):
                         indent=2,
                     )
             finally:
+                if self.current_episode is not None:
+                    self.prev_episode_first_tcp_xyz = self.current_episode.get("first_tcp_xyz")
+                    self.prev_episode_index = self.current_episode.get("episode_index")
                 frames_file.close()
+                if self.postprocess_webp_after_episode:
+                    self._schedule_episode_postprocess(episode_dir)
+                if self.reset_joints_after_episode:
+                    try:
+                        self._reset_joints_to_home()
+                    except Exception as exc:
+                        self.get_logger().error(f"Joint reset after episode failed: {exc}")
                 self.current_episode = None
 
+        self._wait_for_postprocess_jobs()
         self.get_logger().info("All episodes completed.")
 
     # ------------------------ Scene + task ------------------------
@@ -421,6 +526,8 @@ class ProximityDataGenerator(Node):
         rng = random.Random(seed)
         nic_idx = rng.randint(0, 4)
         port_name = rng.choice(["sfp_port_0", "sfp_port_1"])
+        # Organizer docs specify NIC orientation limits in degrees: [-10, +10].
+        nic_orient_limit_rad = math.radians(10.0)
         return EpisodeSpec(
             episode_index=episode_index,
             seed=seed,
@@ -434,6 +541,9 @@ class ProximityDataGenerator(Node):
             },
             nic_mount_index=nic_idx,
             nic_translation=rng.uniform(-0.0215, 0.0234),
+            nic_roll=rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
+            nic_pitch=rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
+            nic_yaw=rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
             sfp_rail_0_translation=rng.uniform(-0.05, 0.05),
             sfp_rail_1_translation=rng.uniform(-0.05, 0.05),
             port_name=port_name,
@@ -461,6 +571,9 @@ class ProximityDataGenerator(Node):
             tb_args.append(f"nic_card_mount_{i}_present:={present}")
             if i == spec.nic_mount_index:
                 tb_args.append(f"nic_card_mount_{i}_translation:={spec.nic_translation}")
+                tb_args.append(f"nic_card_mount_{i}_roll:={spec.nic_roll}")
+                tb_args.append(f"nic_card_mount_{i}_pitch:={spec.nic_pitch}")
+                tb_args.append(f"nic_card_mount_{i}_yaw:={spec.nic_yaw}")
 
         tb_xml = self._expand_xacro("aic_description", "urdf/task_board.urdf.xacro", tb_args)
 
@@ -496,6 +609,11 @@ class ProximityDataGenerator(Node):
                 "pose": spec.task_board_pose,
                 "nic_mount_index": spec.nic_mount_index,
                 "nic_translation": spec.nic_translation,
+                "nic_orientation_rpy_rad": {
+                    "roll": spec.nic_roll,
+                    "pitch": spec.nic_pitch,
+                    "yaw": spec.nic_yaw,
+                },
                 "sfp_mount_rail_0_translation": spec.sfp_rail_0_translation,
                 "sfp_mount_rail_1_translation": spec.sfp_rail_1_translation,
             },
@@ -662,6 +780,7 @@ class ProximityDataGenerator(Node):
             (self.spawn_entity_client, "/gz_server/spawn_entity"),
             (self.delete_entity_client, "/gz_server/delete_entity"),
             (self.tare_client, "/aic_controller/tare_force_torque_sensor"),
+            (self.reset_joints_client, "/scoring/reset_joints"),
             (self.get_state_client, f"/{self.model_node_name}/get_state"),
             (self.change_state_client, f"/{self.model_node_name}/change_state"),
         ]
@@ -750,6 +869,22 @@ class ProximityDataGenerator(Node):
             if time.time() - start > timeout_s:
                 raise RuntimeError("Timeout waiting for future completion")
 
+    def _capture_window(self, duration_s: float, label: str) -> None:
+        if duration_s <= 0.0:
+            return
+        start_count = 0
+        if self.current_episode is not None:
+            start_count = int(self.current_episode.get("frame_count", 0))
+        end_t = time.time() + duration_s
+        while rclpy.ok() and time.time() < end_t:
+            rclpy.spin_once(self, timeout_sec=0.05)
+        end_count = start_count
+        if self.current_episode is not None:
+            end_count = int(self.current_episode.get("frame_count", 0))
+        self.get_logger().info(
+            f"Capture window [{label}] {duration_s:.2f}s frames_added={end_count - start_count}"
+        )
+
     def _expand_xacro(
         self, package_name: str, relative_path: str, xacro_arguments: list[str]
     ) -> str:
@@ -820,6 +955,14 @@ class ProximityDataGenerator(Node):
         resp = self._call_service(self.tare_client, req, timeout_s=10.0)
         if not resp.success:
             raise RuntimeError(f"FT tare failed: {resp.message}")
+
+    def _reset_joints_to_home(self) -> None:
+        req = ResetJoints.Request()
+        req.joint_names = list(self.home_joint_names)
+        req.initial_positions = list(self.home_joint_positions)
+        resp = self._call_service(self.reset_joints_client, req, timeout_s=10.0)
+        if not resp.success:
+            raise RuntimeError(f"ResetJoints failed: {resp.message}")
 
     # ------------------------ Geometry ------------------------
 
@@ -927,6 +1070,132 @@ class ProximityDataGenerator(Node):
             "p99": float(np.percentile(arr, 99)),
         }
 
+    # ------------------------ Async post-processing ------------------------
+
+    @staticmethod
+    def _decode_image_from_meta(raw: bytes, meta: dict[str, Any]) -> Image.Image:
+        width = int(meta.get("width", 0))
+        height = int(meta.get("height", 0))
+        step = int(meta.get("step", 0))
+        encoding = str(meta.get("encoding", "")).lower()
+        arr = np.frombuffer(raw, dtype=np.uint8)
+        if encoding == "mono8":
+            rows = arr.reshape(height, step)[:, :width]
+            return Image.fromarray(rows, mode="L")
+        if encoding in {"rgb8", "bgr8"}:
+            rows = arr.reshape(height, step)[:, : width * 3]
+            rgb = rows.reshape(height, width, 3)
+            if encoding == "bgr8":
+                rgb = rgb[..., ::-1]
+            return Image.fromarray(rgb, mode="RGB")
+        if encoding in {"rgba8", "bgra8"}:
+            rows = arr.reshape(height, step)[:, : width * 4]
+            rgba = rows.reshape(height, width, 4)
+            if encoding == "bgra8":
+                rgba = rgba[..., [2, 1, 0, 3]]
+            return Image.fromarray(rgba, mode="RGBA")
+        raise RuntimeError(f"Unsupported encoding: {encoding}")
+
+    @classmethod
+    def _postprocess_episode_images(
+        cls,
+        episode_dir: Path,
+        output_subdir: str,
+        delete_bin_after_webp: bool,
+    ) -> dict[str, int]:
+        frames_path = episode_dir / "frames.jsonl"
+        if not frames_path.is_file():
+            return {"converted": 0, "deleted": 0, "missing_bin": 0, "unsupported": 0}
+
+        converted = 0
+        deleted = 0
+        missing_bin = 0
+        unsupported = 0
+        with open(frames_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                frame = json.loads(line)
+                frame_idx = int(frame.get("frame_idx", 0))
+                images = frame.get("images", {})
+                for camera in ("left", "center", "right"):
+                    meta = images.get(camera)
+                    if not isinstance(meta, dict):
+                        continue
+                    rel = Path(str(meta.get("path", "")))
+                    bin_path = episode_dir / rel
+                    if not bin_path.is_file():
+                        missing_bin += 1
+                        continue
+                    out_dir = episode_dir / output_subdir / camera
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    out_path = out_dir / f"{frame_idx:06d}.webp"
+                    raw = bin_path.read_bytes()
+                    try:
+                        image = cls._decode_image_from_meta(raw, meta)
+                    except Exception:
+                        unsupported += 1
+                        continue
+                    image.save(out_path, format="WEBP", lossless=True)
+                    converted += 1
+                    if delete_bin_after_webp:
+                        try:
+                            bin_path.unlink()
+                            deleted += 1
+                        except FileNotFoundError:
+                            pass
+        return {
+            "converted": converted,
+            "deleted": deleted,
+            "missing_bin": missing_bin,
+            "unsupported": unsupported,
+        }
+
+    def _schedule_episode_postprocess(self, episode_dir: Path) -> None:
+        if self.postprocess_executor is None:
+            return
+        future = self.postprocess_executor.submit(
+            self._postprocess_episode_images,
+            episode_dir,
+            self.postprocess_output_subdir,
+            self.postprocess_delete_bin_after_webp,
+        )
+        self.postprocess_futures.append(future)
+        self.get_logger().info(f"Scheduled background postprocess for {episode_dir.name}")
+
+    def _wait_for_postprocess_jobs(self) -> None:
+        if self.postprocess_executor is None:
+            return
+        total = len(self.postprocess_futures)
+        if total == 0:
+            self.postprocess_executor.shutdown(wait=True)
+            self.postprocess_executor = None
+            return
+        self.get_logger().info(f"Waiting for {total} background postprocess job(s)...")
+        converted = 0
+        deleted = 0
+        missing = 0
+        unsupported = 0
+        for future in self.postprocess_futures:
+            try:
+                result = future.result()
+            except Exception as exc:
+                self.get_logger().error(f"Background postprocess failed: {exc}")
+                continue
+            converted += int(result.get("converted", 0))
+            deleted += int(result.get("deleted", 0))
+            missing += int(result.get("missing_bin", 0))
+            unsupported += int(result.get("unsupported", 0))
+        self.postprocess_executor.shutdown(wait=True)
+        self.postprocess_executor = None
+        self.postprocess_futures.clear()
+        self.get_logger().info(
+            "Background postprocess complete: "
+            f"converted={converted}, deleted_bin={deleted}, missing_bin={missing}, "
+            f"unsupported={unsupported}"
+        )
+
     def _write_run_manifest(self) -> None:
         commit = os.environ.get("AIC_GIT_COMMIT", "unknown")
         manifest = {
@@ -935,6 +1204,10 @@ class ProximityDataGenerator(Node):
             "num_episodes": self.num_episodes,
             "seed": self.seed,
             "task_time_limit_s": self.task_time_limit_s,
+            "postprocess_webp_after_episode": self.postprocess_webp_after_episode,
+            "postprocess_delete_bin_after_webp": self.postprocess_delete_bin_after_webp,
+            "postprocess_workers": self.postprocess_workers,
+            "postprocess_output_subdir": self.postprocess_output_subdir,
             "output_dir": str(self.run_dir),
             "git_commit": commit,
             "notes": "Baseline single-worker ProximityTeacher data generation run",

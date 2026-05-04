@@ -1,5 +1,5 @@
 # Training Campaign Runbook (ProximityTeacher Baseline)
-Last updated: 2026-05-03
+Last updated: 2026-05-04
 
 ## 1. Purpose
 This runbook defines a strict, repeatable process to generate high-volume training data using `ProximityTeacher` without `aic_engine` orchestration, while keeping data generation isolated from ongoing development experiments.
@@ -74,10 +74,12 @@ Terminal D (host model):
 2. `export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'`
 3. `pixi run -- ros2 run aic_model aic_model --ros-args -p use_sim_time:=true -p policy:=aic_model.policies.ProximityTeacher`
 
-Terminal E (host generator):
-1. `export RMW_IMPLEMENTATION=rmw_zenoh_cpp`
-2. `export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'`
-3. `pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py --ros-args -p num_episodes:=<N> -p seed:=<S> -p output_root:=<CAMPAIGN_ROOT>`
+Terminal E (eval generator, required for `aic_engine_interfaces`):
+1. `source /ws_aic/install/setup.bash`
+2. `export RMW_IMPLEMENTATION=rmw_zenoh_cpp`
+3. `export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'`
+4. `python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"`
+5. `/home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args -p num_episodes:=<N> -p seed:=<S> -p output_root:=<CAMPAIGN_ROOT>`
 
 ## 9. Episode-Level Acceptance Criteria
 Every episode directory must include:
@@ -235,3 +237,11 @@ Use a separate runtime for large campaign generation so development work does no
 5. Host resource contention:
    1. Symptom: unstable timing and occasional timeouts.
    2. Fix: avoid heavy concurrent workloads during large runs.
+
+## 20. Runtime Guardrail for `aic_engine_interfaces`
+1. The generator must run in eval runtime where `/ws_aic/install/setup.bash` exists.
+2. Do not run generator via host `pixi run -- python3 ...` when joint reset via `ResetJoints` is required.
+3. Use `/home/user/aic/scripts/run_proximity_generator_eval.sh`:
+   1. It fails fast if `/ws_aic/install/setup.bash` is missing.
+   2. It runs preflight import check for `aic_engine_interfaces.srv.ResetJoints`.
+   3. It launches generator only after preflight passes.
