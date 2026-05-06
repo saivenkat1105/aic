@@ -67,11 +67,7 @@ class EpisodeSpec:
     episode_index: int
     seed: int
     task_board_pose: dict[str, float]
-    nic_mount_index: int
-    nic_translation: float
-    nic_roll: float
-    nic_pitch: float
-    nic_yaw: float
+    nic_mounts: list[dict[str, Any]]
     sfp_rail_0_translation: float
     sfp_rail_1_translation: float
     port_name: str
@@ -547,10 +543,23 @@ class ProximityDataGenerator(Node):
 
     def _sample_episode_spec(self, episode_index: int, seed: int) -> EpisodeSpec:
         rng = random.Random(seed)
-        nic_idx = rng.randint(0, 4)
-        port_name = rng.choice(["sfp_port_0", "sfp_port_1"])
         # Organizer docs specify NIC orientation limits in degrees: [-10, +10].
         nic_orient_limit_rad = math.radians(10.0)
+        present_count = rng.randint(1, 5)
+        present_indices = sorted(rng.sample(range(5), present_count))
+        nic_mounts: list[dict[str, Any]] = []
+        for idx in present_indices:
+            nic_mounts.append(
+                {
+                    "index": idx,
+                    "translation": rng.uniform(-0.0215, 0.0234),
+                    "roll": rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
+                    "pitch": rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
+                    "yaw": rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
+                }
+            )
+        target_mount = rng.choice(nic_mounts)
+        port_name = rng.choice(["sfp_port_0", "sfp_port_1"])
         return EpisodeSpec(
             episode_index=episode_index,
             seed=seed,
@@ -562,15 +571,11 @@ class ProximityDataGenerator(Node):
                 "pitch": 0.0,
                 "yaw": 3.1415 + rng.uniform(-0.15, 0.15),
             },
-            nic_mount_index=nic_idx,
-            nic_translation=rng.uniform(-0.0215, 0.0234),
-            nic_roll=rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
-            nic_pitch=rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
-            nic_yaw=rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
+            nic_mounts=nic_mounts,
             sfp_rail_0_translation=rng.uniform(-0.05, 0.05),
             sfp_rail_1_translation=rng.uniform(-0.05, 0.05),
             port_name=port_name,
-            target_module_name=f"nic_card_mount_{nic_idx}",
+            target_module_name=f"nic_card_mount_{int(target_mount['index'])}",
             cable_type="sfp_sc_cable",
         )
 
@@ -589,14 +594,20 @@ class ProximityDataGenerator(Node):
             f"sfp_mount_rail_1_translation:={spec.sfp_rail_1_translation}",
         ]
 
+        mounts_by_index = {
+            int(mount["index"]): mount for mount in spec.nic_mounts
+        }
         for i in range(5):
-            present = "true" if i == spec.nic_mount_index else "false"
+            mount = mounts_by_index.get(i)
+            present = "true" if mount is not None else "false"
             tb_args.append(f"nic_card_mount_{i}_present:={present}")
-            if i == spec.nic_mount_index:
-                tb_args.append(f"nic_card_mount_{i}_translation:={spec.nic_translation}")
-                tb_args.append(f"nic_card_mount_{i}_roll:={spec.nic_roll}")
-                tb_args.append(f"nic_card_mount_{i}_pitch:={spec.nic_pitch}")
-                tb_args.append(f"nic_card_mount_{i}_yaw:={spec.nic_yaw}")
+            if mount is not None:
+                tb_args.append(
+                    f"nic_card_mount_{i}_translation:={float(mount['translation'])}"
+                )
+                tb_args.append(f"nic_card_mount_{i}_roll:={float(mount['roll'])}")
+                tb_args.append(f"nic_card_mount_{i}_pitch:={float(mount['pitch'])}")
+                tb_args.append(f"nic_card_mount_{i}_yaw:={float(mount['yaw'])}")
 
         tb_xml = self._expand_xacro("aic_description", "urdf/task_board.urdf.xacro", tb_args)
 
@@ -627,16 +638,52 @@ class ProximityDataGenerator(Node):
 
         self._spawn_entity(name="cable_0", xml=cable_xml, pose=cable_pose)
 
+        mount_locations: list[dict[str, Any]] = []
+        port_locations: list[dict[str, Any]] = []
+        for mount in spec.nic_mounts:
+            idx = int(mount["index"])
+            module_name = f"nic_card_mount_{idx}"
+            mount_frame = f"task_board/{module_name}/nic_card_mount_link"
+            mount_tf = self._lookup_transform("world", mount_frame)
+            mount_locations.append(
+                {
+                    "module_name": module_name,
+                    "index": idx,
+                    "configured": {
+                        "translation": float(mount["translation"]),
+                        "orientation_rpy_rad": {
+                            "roll": float(mount["roll"]),
+                            "pitch": float(mount["pitch"]),
+                            "yaw": float(mount["yaw"]),
+                        },
+                    },
+                    "world_pose_estimate": self._transform_to_dict(mount_tf),
+                    "is_task_target_module": module_name == spec.target_module_name,
+                }
+            )
+
+            for port_name in ("sfp_port_0", "sfp_port_1"):
+                port_frame = f"task_board/{module_name}/{port_name}_link"
+                port_tf = self._lookup_transform("world", port_frame)
+                port_locations.append(
+                    {
+                        "module_name": module_name,
+                        "port_name": port_name,
+                        "frame": port_frame,
+                        "world_pose_estimate": self._transform_to_dict(port_tf),
+                        "is_task_target_port": (
+                            module_name == spec.target_module_name
+                            and port_name == spec.port_name
+                        ),
+                    }
+                )
+
         return {
             "task_board": {
                 "pose": spec.task_board_pose,
-                "nic_mount_index": spec.nic_mount_index,
-                "nic_translation": spec.nic_translation,
-                "nic_orientation_rpy_rad": {
-                    "roll": spec.nic_roll,
-                    "pitch": spec.nic_pitch,
-                    "yaw": spec.nic_yaw,
-                },
+                "nic_mount_count": len(spec.nic_mounts),
+                "nic_mounts": mount_locations,
+                "ports": port_locations,
                 "sfp_mount_rail_0_translation": spec.sfp_rail_0_translation,
                 "sfp_mount_rail_1_translation": spec.sfp_rail_1_translation,
             },
@@ -660,6 +707,24 @@ class ProximityDataGenerator(Node):
         task.target_module_name = spec.target_module_name
         task.time_limit = int(self.task_time_limit_s)
         return task
+
+    @staticmethod
+    def _transform_to_dict(transform) -> dict[str, Any] | None:
+        if transform is None:
+            return None
+        return {
+            "translation": {
+                "x": float(transform.translation.x),
+                "y": float(transform.translation.y),
+                "z": float(transform.translation.z),
+            },
+            "rotation": {
+                "x": float(transform.rotation.x),
+                "y": float(transform.rotation.y),
+                "z": float(transform.rotation.z),
+                "w": float(transform.rotation.w),
+            },
+        }
 
     # ------------------------ Scoring estimate ------------------------
 
