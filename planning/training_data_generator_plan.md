@@ -10,6 +10,7 @@ Run ProximityTeacher data generation with split architecture:
 4. Use `enter_new_eval.sh` once to create the first eval runtime, then `enter_eval.sh` for all additional terminals.
 5. Episode teardown follows organizer sequencing: deactivate `aic_model` -> delete `cable_0`/`task_board` -> reset joints -> next episode re-activates model before action.
 6. Lifecycle transitions use retry + long timeout guardrails to prevent transient service stalls from failing episodes.
+7. Each episode now spawns a random number of NIC mounts (`1..5`), randomizes each mount pose within organizer limits, and selects exactly one target port for the task while recording all mount/port locations.
 
 ## Exact Setup (Eval Container Only)
 Terminal 1 (host: create fresh first eval runtime):
@@ -139,6 +140,12 @@ source install/setup.bash
 - `images_debug/{left,center,right}/*.webp`
 - `images/{left,center,right}/*.bin` only if retained or conversion fails
 
+`scene.json` now includes:
+- all spawned NIC mounts with configured pose randomization values
+- world-pose estimates for each spawned NIC mount
+- world-pose estimates for both SFP ports on each spawned NIC mount
+- boolean markers for `is_task_target_module` and `is_task_target_port`
+
 ## Hard Guardrails
 1. Always start with `enter_new_eval.sh` once, then only `enter_eval.sh` for additional terminals.
 2. Use `pixi run --` for every `ros2` and `python3` command.
@@ -152,3 +159,4 @@ source install/setup.bash
 - 2026-05-04: Updated plan to enforce `enter_new_eval.sh` first, `enter_eval.sh` for additional terminals, and `pixi run --` for all `ros2`/`python3` commands.
 - 2026-05-04: Updated runtime behavior to organizer-aligned per-episode reset ordering (model deactivate, entity delete, joint reset, re-activate on next episode).
 - 2026-05-04: Added lifecycle transition robustness (`lifecycle_transition_timeout_s`, `lifecycle_transition_retries`) and explicit `deactivate_model_between_episodes` switch.
+- 2026-05-06: Updated generator to randomize NIC mount count per episode (`1..5`), keep one task target port, and store all mount/port locations for distractor-aware training.
