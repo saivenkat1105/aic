@@ -44,10 +44,12 @@ class ProximityTeacher(Policy):
     """Training-only teacher that reaches no-contact standoff from target port."""
 
     TF_WAIT_TIMEOUT_S = 10.0
-    APPROACH_DURATION_S = 5.0
+    APPROACH_DURATION_S = 10.0
     APPROACH_STEPS = 100
+    SETTLE_EVERY_STEPS = 10
+    SETTLE_DURATION_S = 0.5
     STANDOFF_M = 0.020
-    HOLD_DURATION_S = 5.0
+    HOLD_DURATION_S = 0.2
     MAX_INTEGRATOR_WINDUP = 0.05
     INTEGRATOR_GAIN = 0.15
 
@@ -291,6 +293,12 @@ class ProximityTeacher(Policy):
                 self.get_logger().warn(f"TF lookup failed during approach: {ex}")
                 send_feedback(f"proximity_teacher_warn: approach_tf_lookup_failed={ex}")
             self.sleep_for(self.APPROACH_DURATION_S / float(self.APPROACH_STEPS))
+            if (
+                self.SETTLE_EVERY_STEPS > 0
+                and ((t + 1) % self.SETTLE_EVERY_STEPS == 0)
+                and (t + 1) < self.APPROACH_STEPS
+            ):
+                self.sleep_for(self.SETTLE_DURATION_S)
 
         hold_steps = max(1, int(self.HOLD_DURATION_S / 0.05))
         for _ in range(hold_steps):

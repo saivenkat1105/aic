@@ -15,6 +15,7 @@ import rclpy
 from aic_model_interfaces.msg import Observation
 from aic_training_interfaces.srv import CaptureStatus, StartEpisodeCapture, StopEpisodeCapture
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
 from tf2_ros import Buffer, TransformException, TransformListener
 from PIL import Image
@@ -35,6 +36,9 @@ class TrainingFrameSink(Node):
         self.declare_parameter("postprocess_labels_filename", "labels_visibility_occlusion.jsonl")
         self.declare_parameter("wait_for_postprocess_on_stop", False)
         self.declare_parameter("frame_schema_version", "visual_proximity_v1")
+        self.declare_parameter("observation_qos", "sensor_data")
+        self.declare_parameter("drop_convert_when_busy", True)
+        self.declare_parameter("defer_gt_to_postprocess", True)
 
         self.max_pending_frames = int(self.get_parameter("max_pending_frames").value)
         self.write_workers = max(1, int(self.get_parameter("write_workers").value))
@@ -53,6 +57,9 @@ class TrainingFrameSink(Node):
             self.get_parameter("wait_for_postprocess_on_stop").value
         )
         self.frame_schema_version = str(self.get_parameter("frame_schema_version").value)
+        self.observation_qos = str(self.get_parameter("observation_qos").value).lower()
+        self.drop_convert_when_busy = bool(self.get_parameter("drop_convert_when_busy").value)
+        self.defer_gt_to_postprocess = bool(self.get_parameter("defer_gt_to_postprocess").value)
 
         self.active = False
         self.active_episode_id = ""
@@ -77,6 +84,7 @@ class TrainingFrameSink(Node):
         self.postprocessed_episodes = 0
         self.postprocess_failures = 0
         self.pending_postprocess = 0
+        self.skipped_convert_jobs = 0
 
         self.write_q: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=self.max_pending_frames)
         self.convert_q: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=self.max_pending_frames * 6)
@@ -89,7 +97,10 @@ class TrainingFrameSink(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self, spin_thread=False)
         self._start_workers()
 
-        self.create_subscription(Observation, "/observations", self._on_observation, 10)
+        obs_qos = 10
+        if self.observation_qos == "sensor_data":
+            obs_qos = qos_profile_sensor_data
+        self.create_subscription(Observation, "/observations", self._on_observation, obs_qos)
         self.create_service(StartEpisodeCapture, "/training_frame_sink/start_episode_capture", self._start_episode)
         self.create_service(StopEpisodeCapture, "/training_frame_sink/stop_episode_capture", self._stop_episode)
         self.create_service(CaptureStatus, "/training_frame_sink/capture_status", self._capture_status)
@@ -132,6 +143,7 @@ class TrainingFrameSink(Node):
             self.converted_images = 0
             self.purged_bins = 0
             self.dropped_frames = 0
+            self.skipped_convert_jobs = 0
             self.obs_rx = 0
 
             (self.episode_dir / "images" / "left").mkdir(parents=True, exist_ok=True)
@@ -185,6 +197,7 @@ class TrainingFrameSink(Node):
                     "episode_id": ep,
                     "episode_dir": ep_dir,
                     "task": dict(self.task_context),
+                    "scene": dict(self.scene_context),
                 }
             )
             with self.state_lock:
@@ -233,7 +246,8 @@ class TrainingFrameSink(Node):
         resp.message = (
             f"ok postprocess_pending={self.pending_postprocess} "
             f"postprocessed={self.postprocessed_episodes} "
-            f"postprocess_failures={self.postprocess_failures}"
+            f"postprocess_failures={self.postprocess_failures} "
+            f"skipped_convert_jobs={self.skipped_convert_jobs}"
         )
         return resp
 
@@ -247,7 +261,112 @@ class TrainingFrameSink(Node):
             episode_dir = self.episode_dir
             episode_id = self.active_episode_id
 
-        static_gt = self._ensure_static_gt(msg)
+        try:
+            # Keep callback path minimal: enqueue the raw message and do all
+            # heavy serialization and image copies in worker threads.
+            self.write_q.put_nowait(
+                {
+                    "episode_dir": episode_dir,
+                    "episode_id": episode_id,
+                    "frame_idx": frame_idx,
+                    "msg": msg,
+                }
+            )
+        except queue.Full:
+            try:
+                _ = self.write_q.get_nowait()
+            except queue.Empty:
+                pass
+            try:
+                self.write_q.put_nowait(
+                    {
+                        "episode_dir": episode_dir,
+                        "episode_id": episode_id,
+                        "frame_idx": frame_idx,
+                        "msg": msg,
+                    }
+                )
+            except queue.Full:
+                with self.state_lock:
+                    self.dropped_frames += 1
+                return
+            with self.state_lock:
+                self.dropped_frames += 1
+
+    def _write_worker(self) -> None:
+        while not self.shutdown_event.is_set():
+            try:
+                item = self.write_q.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            try:
+                frame, jobs = self._build_frame_and_jobs(item)
+                for job in jobs:
+                    bin_path = Path(job["episode_dir"]) / Path(job["meta"]["bin_path"])
+                    bin_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(bin_path, "wb") as f:
+                        f.write(job["raw"])
+                    convert_job = {
+                        "episode_dir": str(job["episode_dir"]),
+                        "frame_idx": int(job["frame_idx"]),
+                        "meta": dict(job["meta"]),
+                    }
+                    if self.drop_convert_when_busy:
+                        try:
+                            self.convert_q.put_nowait(convert_job)
+                        except queue.Full:
+                            with self.state_lock:
+                                self.skipped_convert_jobs += 1
+                    else:
+                        self.convert_q.put(convert_job)
+                with self.frames_lock:
+                    if self.frames_file is not None:
+                        self.frames_file.write(json.dumps(frame) + "\n")
+                with self.state_lock:
+                    self.written_frames += 1
+            finally:
+                self.write_q.task_done()
+
+    def _convert_worker(self) -> None:
+        while not self.shutdown_event.is_set():
+            try:
+                job = self.convert_q.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            try:
+                episode_dir = Path(job["episode_dir"])
+                meta = job["meta"]
+                bin_path = episode_dir / Path(meta["bin_path"])
+                webp_path = episode_dir / Path(meta["path"])
+                webp_path.parent.mkdir(parents=True, exist_ok=True)
+                if not bin_path.exists():
+                    continue
+                raw = bin_path.read_bytes()
+                image = self._decode_image_from_meta(raw, meta)
+                image.save(webp_path, format="WEBP", lossless=True)
+                with self.state_lock:
+                    self.converted_images += 1
+                keep_bin = self.keep_every_nth_bin > 0 and (
+                    (int(job["frame_idx"]) % self.keep_every_nth_bin) == 0
+                )
+                if not keep_bin and bin_path.exists():
+                    bin_path.unlink()
+                    with self.state_lock:
+                        self.purged_bins += 1
+            except Exception as exc:
+                self.get_logger().warn(f"WebP conversion failed for {job.get('meta', {}).get('bin_path')}: {exc}")
+            finally:
+                self.convert_q.task_done()
+
+    def _build_frame_and_jobs(self, item: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        msg: Observation = item["msg"]
+        frame_idx = int(item["frame_idx"])
+        episode_id = str(item["episode_id"])
+        episode_dir = Path(item["episode_dir"])
+
+        static_gt: dict[str, Any] = {}
+        if not self.defer_gt_to_postprocess:
+            static_gt = self._ensure_static_gt(msg)
 
         frame = {
             "schema_version": self.frame_schema_version,
@@ -289,7 +408,6 @@ class TrainingFrameSink(Node):
             },
             "training_gt": static_gt,
         }
-        # Flat aliases kept for downstream tooling that expects top-level fields.
         frame["tcp_velocity"] = frame["controller_state"]["tcp_velocity"]
         frame["tcp_error"] = frame["controller_state"]["tcp_error"]
         frame["left_camera_info"] = frame["camera_info"]["left"]
@@ -297,12 +415,13 @@ class TrainingFrameSink(Node):
         frame["right_camera_info"] = frame["camera_info"]["right"]
         frame["t_base_target_port_link_gt"] = static_gt.get("t_base_target_port_link_gt")
         frame["t_base_target_port_entrance_gt"] = static_gt.get("t_base_target_port_entrance_gt")
+
         cams = {
             "left": msg.left_image,
             "center": msg.center_image,
             "right": msg.right_image,
         }
-        jobs = []
+        jobs: list[dict[str, Any]] = []
         for cam, imsg in cams.items():
             if cam not in self.enabled_cameras:
                 continue
@@ -329,74 +448,7 @@ class TrainingFrameSink(Node):
                     "meta": meta,
                 }
             )
-
-        try:
-            self.write_q.put_nowait({"frame": frame, "jobs": jobs})
-        except queue.Full:
-            try:
-                _ = self.write_q.get_nowait()
-            except queue.Empty:
-                pass
-            try:
-                self.write_q.put_nowait({"frame": frame, "jobs": jobs})
-            except queue.Full:
-                with self.state_lock:
-                    self.dropped_frames += 1
-                return
-            with self.state_lock:
-                self.dropped_frames += 1
-
-    def _write_worker(self) -> None:
-        while not self.shutdown_event.is_set():
-            try:
-                item = self.write_q.get(timeout=0.1)
-            except queue.Empty:
-                continue
-            try:
-                frame = item["frame"]
-                jobs = item["jobs"]
-                for job in jobs:
-                    bin_path = Path(job["episode_dir"]) / Path(job["meta"]["bin_path"])
-                    bin_path.parent.mkdir(parents=True, exist_ok=True)
-                    with open(bin_path, "wb") as f:
-                        f.write(job["raw"])
-                    self.convert_q.put(job)
-                with self.frames_lock:
-                    if self.frames_file is not None:
-                        self.frames_file.write(json.dumps(frame) + "\n")
-                with self.state_lock:
-                    self.written_frames += 1
-            finally:
-                self.write_q.task_done()
-
-    def _convert_worker(self) -> None:
-        while not self.shutdown_event.is_set():
-            try:
-                job = self.convert_q.get(timeout=0.1)
-            except queue.Empty:
-                continue
-            try:
-                episode_dir = Path(job["episode_dir"])
-                meta = job["meta"]
-                raw = job["raw"]
-                bin_path = episode_dir / Path(meta["bin_path"])
-                webp_path = episode_dir / Path(meta["path"])
-                webp_path.parent.mkdir(parents=True, exist_ok=True)
-                image = self._decode_image_from_meta(raw, meta)
-                image.save(webp_path, format="WEBP", lossless=True)
-                with self.state_lock:
-                    self.converted_images += 1
-                keep_bin = self.keep_every_nth_bin > 0 and (
-                    (int(job["frame_idx"]) % self.keep_every_nth_bin) == 0
-                )
-                if not keep_bin and bin_path.exists():
-                    bin_path.unlink()
-                    with self.state_lock:
-                        self.purged_bins += 1
-            except Exception as exc:
-                self.get_logger().warn(f"WebP conversion failed for {job.get('meta', {}).get('bin_path')}: {exc}")
-            finally:
-                self.convert_q.task_done()
+        return frame, jobs
 
     def _postprocess_worker(self) -> None:
         while not self.shutdown_event.is_set():
@@ -407,6 +459,9 @@ class TrainingFrameSink(Node):
             try:
                 episode_dir = Path(item["episode_dir"])
                 task = dict(item.get("task", {}))
+                scene = dict(item.get("scene", {}))
+                if self.defer_gt_to_postprocess:
+                    self._ensure_episode_gt_fields(episode_dir=episode_dir, task=task, scene=scene)
                 out_path = episode_dir / self.postprocess_labels_filename
                 self._generate_visibility_occlusion_labels(
                     frames_path=episode_dir / "frames.jsonl",
@@ -437,6 +492,7 @@ class TrainingFrameSink(Node):
                 f"obs_rx={self.obs_rx} queued={self.write_q.qsize()} "
                 f"written={self.written_frames} converted={self.converted_images} "
                 f"purged={self.purged_bins} dropped={self.dropped_frames} "
+                f"skipped_convert_jobs={self.skipped_convert_jobs} "
                 f"convert_queued={self.convert_q.qsize()} "
                 f"postprocess_pending={self.pending_postprocess} "
                 f"postprocessed={self.postprocessed_episodes} "
@@ -458,6 +514,116 @@ class TrainingFrameSink(Node):
             return json.loads(p.read_text(encoding="utf-8"))
         except Exception:
             return {}
+
+    def _ensure_episode_gt_fields(
+        self,
+        *,
+        episode_dir: Path,
+        task: dict[str, Any],
+        scene: dict[str, Any],
+    ) -> None:
+        frames_path = episode_dir / "frames.jsonl"
+        if not frames_path.is_file():
+            return
+        raw_lines = frames_path.read_text(encoding="utf-8").splitlines()
+        if not raw_lines:
+            return
+
+        frames: list[dict[str, Any]] = []
+        camera_frame_ids: dict[str, str] = {}
+        gt_already_present = True
+        for line in raw_lines:
+            if not line.strip():
+                continue
+            frame = json.loads(line)
+            frames.append(frame)
+            images = frame.get("images", {})
+            if isinstance(images, dict):
+                for cam in ("left", "center", "right"):
+                    im = images.get(cam, {})
+                    if isinstance(im, dict) and im.get("frame_id"):
+                        camera_frame_ids.setdefault(cam, str(im["frame_id"]))
+            if frame.get("t_base_target_port_link_gt") is None:
+                gt_already_present = False
+        if not frames:
+            return
+        if gt_already_present:
+            return
+
+        static_gt = self._build_static_gt_from_frames(
+            task=task,
+            scene=scene,
+            camera_frame_ids=camera_frame_ids,
+        )
+        for frame in frames:
+            training_gt = frame.get("training_gt")
+            if not isinstance(training_gt, dict):
+                training_gt = {}
+            for key, value in static_gt.items():
+                training_gt[key] = value
+            frame["training_gt"] = training_gt
+            frame["t_base_target_port_link_gt"] = static_gt.get("t_base_target_port_link_gt")
+            frame["t_base_target_port_entrance_gt"] = static_gt.get("t_base_target_port_entrance_gt")
+
+        tmp_path = frames_path.with_suffix(".jsonl.tmp")
+        with tmp_path.open("w", encoding="utf-8") as fout:
+            for frame in frames:
+                fout.write(json.dumps(frame) + "\n")
+        tmp_path.replace(frames_path)
+
+    def _build_static_gt_from_frames(
+        self,
+        *,
+        task: dict[str, Any],
+        scene: dict[str, Any],
+        camera_frame_ids: dict[str, str],
+    ) -> dict[str, Any]:
+        target_module = str(task.get("target_module_name", ""))
+        target_port = str(task.get("port_name", ""))
+        port_link_frame = (
+            f"task_board/{target_module}/{target_port}_link" if target_module and target_port else ""
+        )
+        port_entrance_frame = f"{port_link_frame}_entrance" if port_link_frame else ""
+        base_to_port_link = self._lookup_transform_dict("base_link", port_link_frame)
+        base_to_port_entrance = self._lookup_transform_dict("base_link", port_entrance_frame)
+
+        base_to_camera_optical: dict[str, Any] = {}
+        for cam in ("left", "center", "right"):
+            frame_id = camera_frame_ids.get(cam, "")
+            if frame_id:
+                base_to_camera_optical[cam] = self._lookup_transform_dict("base_link", frame_id)
+            else:
+                base_to_camera_optical[cam] = None
+
+        all_ports_gt = []
+        scene_ports = scene.get("task_board", {}).get("ports", [])
+        if isinstance(scene_ports, list):
+            for p in scene_ports:
+                if not isinstance(p, dict):
+                    continue
+                module_name = str(p.get("module_name", ""))
+                port_name = str(p.get("port_name", ""))
+                if not module_name or not port_name:
+                    continue
+                frame = f"task_board/{module_name}/{port_name}_link"
+                all_ports_gt.append(
+                    {
+                        "module_name": module_name,
+                        "port_name": port_name,
+                        "is_task_target_port": bool(p.get("is_task_target_port", False)),
+                        "t_base_port_link_gt": self._lookup_transform_dict("base_link", frame),
+                        "t_base_port_entrance_gt": self._lookup_transform_dict(
+                            "base_link", f"{frame}_entrance"
+                        ),
+                    }
+                )
+
+        return {
+            "t_base_target_port_link_gt": base_to_port_link,
+            "t_base_target_port_entrance_gt": base_to_port_entrance,
+            "base_to_camera_optical": base_to_camera_optical,
+            "all_ports_gt_base": all_ports_gt,
+        }
 
     @staticmethod
     def _target_port_link_frame_from_task(task: dict[str, Any]) -> str:

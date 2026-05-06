@@ -549,8 +549,9 @@ class ProximityDataGenerator(Node):
 
     def _sample_episode_spec(self, episode_index: int, seed: int) -> EpisodeSpec:
         rng = random.Random(seed)
-        # Organizer docs specify NIC orientation limits in degrees: [-10, +10].
-        nic_orient_limit_rad = math.radians(10.0)
+        # Organizer docs for qualification specify random NIC translation on rail
+        # plus random yaw offset; keep roll/pitch fixed to avoid cross-rail clashes.
+        nic_yaw_limit_rad = math.radians(10.0)
         present_count = rng.randint(1, 5)
         present_indices = sorted(rng.sample(range(5), present_count))
         nic_mounts: list[dict[str, Any]] = []
@@ -559,9 +560,9 @@ class ProximityDataGenerator(Node):
                 {
                     "index": idx,
                     "translation": rng.uniform(-0.0215, 0.0234),
-                    "roll": rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
-                    "pitch": rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
-                    "yaw": rng.uniform(-nic_orient_limit_rad, nic_orient_limit_rad),
+                    "roll": 0.0,
+                    "pitch": 0.0,
+                    "yaw": rng.uniform(-nic_yaw_limit_rad, nic_yaw_limit_rad),
                 }
             )
         target_mount = rng.choice(nic_mounts)

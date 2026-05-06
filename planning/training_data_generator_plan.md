@@ -10,9 +10,10 @@ Run ProximityTeacher data generation with split architecture:
 4. Use `enter_new_eval.sh` once to create the first eval runtime, then `enter_eval.sh` for all additional terminals.
 5. Episode teardown follows organizer sequencing: deactivate `aic_model` -> delete `cable_0`/`task_board` -> reset joints -> next episode re-activates model before action.
 6. Lifecycle transitions use retry + long timeout guardrails to prevent transient service stalls from failing episodes.
-7. Each episode now spawns a random number of NIC mounts (`1..5`), randomizes each mount pose within organizer limits, and selects exactly one target port for the task while recording all mount/port locations.
+7. Each episode now spawns a random number of NIC mounts (`1..5`), randomizes each mount translation + yaw within organizer limits, and selects exactly one target port for the task while recording all mount/port locations.
 8. Each frame capture now records all metadata required for C3/C4/C5 supervision, including per-frame camera calibration, controller kinematics terms (`tcp_velocity`, `tcp_error`), and training-only GT port transforms.
 9. Visibility/occlusion tags are generated as a required post-processing step from stored GT geometry + camera projection consistency.
+10. High-throughput mode keeps observation callback minimal and shifts heavy work to worker/post-processing queues.
 
 ## Exact Start Procedure (Eval Container Only)
 Run in this exact order.
@@ -89,12 +90,15 @@ export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
 pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/training_frame_sink.py --ros-args \
+  -p observation_qos:=sensor_data \
   -p max_pending_frames:=128 \
   -p write_workers:=2 \
-  -p convert_workers:=4 \
+  -p convert_workers:=1 \
   -p postprocess_workers:=1 \
   -p postprocess_visibility_labels:=true \
   -p postprocess_labels_filename:=labels_visibility_occlusion.jsonl \
+  -p defer_gt_to_postprocess:=true \
+  -p drop_convert_when_busy:=true \
   -p wait_for_postprocess_on_stop:=false \
   -p keep_every_nth_bin:=0 \
   -p images_output_subdir:=images_debug
@@ -113,9 +117,9 @@ export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
 /home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args \
-  -p num_episodes:=10 \
-  -p seed:=42 \
-  -p output_root:=/home/user/training_data/visual_motor_policy/debug \
+  -p num_episodes:=5000 \
+  -p seed:=429508 \
+  -p output_root:=/home/user/training_data/visual_motor_policy/updated_training_data \
   -p use_frame_sink:=true \
   -p frame_sink_service_ns:=/training_frame_sink \
   -p frame_sink_require_webp_done:=true \
@@ -130,6 +134,8 @@ export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 1. In split mode (`use_frame_sink:=true`), `training_frame_sink.py` owns image conversion and post-processing.
 2. Generator-side `postprocess_webp_after_episode` is ignored in split mode by design.
 3. Post-processing runs asynchronously after each episode stop and does not block the next episode by default.
+4. In throughput mode (`defer_gt_to_postprocess:=true`), per-frame GT aliases are hydrated during post-processing to reduce callback overhead.
+5. In throughput mode (`drop_convert_when_busy:=true`), conversion jobs may be skipped under heavy load to protect observation ingestion rate.
 
 ## Build Step (Only After Interface/Script Changes)
 In one joined eval terminal:
@@ -190,6 +196,9 @@ Guaranteed per-frame aliases (top-level):
   - projection diagnostics: projected pixel, in-bounds flag, positive-depth flag
   - optional reprojection residual field for quality auditing
 
+Throughput-mode note:
+- GT aliases (`t_base_target_port_link_gt`, `t_base_target_port_entrance_gt`) may appear as `null` during live write and then be filled by post-processing.
+
 ## Verification Commands
 Run these after generator starts:
 ```bash
@@ -201,10 +210,20 @@ pixi run -- ros2 service call /training_frame_sink/capture_status aic_training_i
 
 After at least one episode:
 ```bash
-RUN_DIR=$(ls -dt /home/user/training_data/visual_motor_policy/debug/run_20260506_063957 | head -n 1)
+RUN_DIR=$(ls -dt /home/user/training_data/visual_motor_policy/updated_training_data/run_* | head -n 1)
 EP_DIR=$(ls -dt "$RUN_DIR"/episodes/episode_* | head -n 1)
-head -n 1 "$EP_DIR/frames.jsonl" | jq '{frame_idx, tcp_velocity, tcp_error, left_camera_info: (.left_camera_info|keys), gt_keys: {port_link: .t_base_target_port_link_gt, port_entrance: .t_base_target_port_entrance_gt}}'
+head -n 1 "$EP_DIR/frames.jsonl" | jq '{
+  frame_idx,
+  has_tcp_velocity: (.tcp_velocity != null),
+  has_tcp_error: (.tcp_error != null),
+  has_left_camera_info: (.left_camera_info != null),
+  has_center_camera_info: (.center_camera_info != null),
+  has_right_camera_info: (.right_camera_info != null),
+  has_gt_port_link: (.t_base_target_port_link_gt != null),
+  has_gt_port_entrance: (.t_base_target_port_entrance_gt != null)
+}'
 test -f "$EP_DIR/labels_visibility_occlusion.jsonl" && echo "labels file exists"
+pixi run -- ros2 service call /training_frame_sink/capture_status aic_training_interfaces/srv/CaptureStatus "{episode_id: ''}"
 ```
 
 ## Hard Guardrails
@@ -224,3 +243,4 @@ test -f "$EP_DIR/labels_visibility_occlusion.jsonl" && echo "labels file exists"
 - 2026-05-06: Updated plan to require per-frame `CameraInfo`, `tcp_velocity`, `tcp_error`, and training-only GT `port_link`/`port_entrance` transforms in `frames.jsonl`.
 - 2026-05-06: Added required post-processing output `labels_visibility_occlusion.jsonl` and made visibility/occlusion tagging a mandatory data-prep step for C3/C4/C5.
 - 2026-05-06: Locked exact startup order (6 terminals), clarified sink ownership of async post-processing, and added explicit runtime verification commands for per-frame fields.
+- 2026-05-06: Added high-throughput sink settings (`observation_qos:=sensor_data`, deferred GT hydration, and drop-on-convert-backlog policy) to maximize observation ingestion rate under disk constraints.
