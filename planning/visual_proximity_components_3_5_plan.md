@@ -65,6 +65,7 @@ These decisions are fixed for v1 unless explicitly revised:
 
 2. Dataset strategy
 - Use distractor-rich dataset (including dummy mounts/ports).
+ - Include mandatory preprocessing-generated visibility/occlusion tags from stored GT transforms.
 
 3. Camera metadata granularity
 - Store full `CameraInfo` every frame for all cameras.
@@ -118,6 +119,9 @@ Per frame-camera sample:
 - `sfp_port_1_link` and `sfp_port_1_entrance`
 - visibility labels for each keypoint
 - dummy class annotations for distractor mounts/ports
+
+Visibility/occlusion labels are not hand-entered by default:
+- they must be generated in preprocessing from stored per-frame GT transforms + per-frame camera projection checks.
 
 ### Runtime output schema (owned by C3)
 
@@ -206,6 +210,7 @@ Hybrid deterministic semantic assignment:
 - use board/mount geometry priors
 - fuse cross-camera evidence
 - resolve identity with deterministic cost-based assignment
+- consume preprocessing-generated visibility/occlusion tags as reliability priors during selector lock/hold decisions.
 
 ### Selector state machine
 
@@ -284,6 +289,9 @@ Primary mode:
 Monocular recovery mode:
 - allow limited motion aimed at reacquiring second camera view.
 - do not allow normal forward approach on weak monocular depth.
+
+Training/validation dependency:
+- C5 validation must use preprocessing-generated visibility/occlusion tags to partition metrics by visibility regime (visible, partially occluded, out-of-fov/truncated).
 
 ### Ownership rule
 
@@ -401,11 +409,17 @@ This section defines exact metadata to populate in the new distractor-rich datas
 - `t_base_target_port_entrance_gt`
 - GT projected keypoints per camera for audit
 
+8. Preprocessing labels (required for C3/C4/C5 supervision):
+- `visibility` and `occlusion` tags for each supervised keypoint
+- projection validity flags (in-bounds, positive depth)
+- optional per-keypoint reprojection diagnostics
+
 ## 6.2 Per-episode fields
 
 - `scene.json` (board and component placements)
 - calibration snapshot reference
 - episode-level calibration hash/version
+- `labels_visibility_occlusion.jsonl` (generated preprocessing artifact)
 - outcome summary (`success/failure`, reason)
 - score summary (training analytics only)
 
@@ -416,6 +430,24 @@ This section defines exact metadata to populate in the new distractor-rich datas
 - data schema version
 - git commit hash
 - generator config
+- preprocessing config/version (visibility/occlusion labeling rules)
+
+## 6.4 Required Preprocessing Pipeline (Must-Do)
+
+1. Input artifacts:
+- `frames.jsonl` with per-frame `CameraInfo`, `tcp_pose`, `tcp_velocity`, `tcp_error`, and GT target transforms.
+
+2. Per-frame projection pass:
+- project GT `port_link` and `port_entrance` into each camera using per-frame calibration metadata.
+- compute `in_bounds`, `positive_depth`, and view consistency fields.
+
+3. Label generation:
+- assign keypoint `visibility`/`occlusion` tags (`visible|occluded|out_of_fov|truncated`).
+- write standardized output `labels_visibility_occlusion.jsonl`.
+
+4. Quality audit:
+- run overlay checks on sampled frames across early/mid/near-port phases.
+- fail preprocessing if schema or projection validity checks regress.
 
 ---
 
@@ -504,4 +536,3 @@ Required behavior:
 
 4. This is a planning artifact:
 - implementation follows this spec in subsequent code changes.
-
