@@ -103,11 +103,9 @@ set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
-pixi run -- python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"
-
 /home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args \
-  -p num_episodes:=5000 \
-  -p seed:=2200123 \
+  -p num_episodes:=500 \
+  -p seed:=22000123 \
   -p output_root:=/home/user/training_data/visual_motor_policy/training_dataset \
   -p use_frame_sink:=true \
   -p frame_sink_service_ns:=/training_frame_sink \
