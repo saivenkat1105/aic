@@ -1,115 +1,131 @@
-# Graph Report - /home/user/aic  (2026-05-06)
+# Graph Report - aic  (2026-05-06)
 
 ## Corpus Check
-- 173 files · ~112,345 words
+- 109 files · ~117,568 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 931 nodes · 1259 edges · 108 communities (80 shown, 28 thin omitted)
-- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 90 edges (avg confidence: 0.72)
+- 1054 nodes · 1623 edges · 123 communities (88 shown, 35 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 90 edges (avg confidence: 0.72)
 - Token cost: 0 input · 0 output
 
+## Graph Freshness
+- Built from commit: `fca80ce5`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
+
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Example Scoring Tier|Example Scoring Tier]]
-- [[_COMMUNITY_Proximity_data_generator Decode_image_from_meta Episodespec|Proximity_data_generator Decode_image_from_meta Episodespec]]
-- [[_COMMUNITY_Main Init__ Node|Main Init__ Node]]
-- [[_COMMUNITY_Challenge Evaluation Board|Challenge Evaluation Board]]
-- [[_COMMUNITY_Scoringtier2 Calculateinverseproportionalscore Computescore|Scoringtier2 Calculateinverseproportionalscore Computescore]]
-- [[_COMMUNITY_Aic_engine Cpp Hpp|Aic_engine Cpp Hpp]]
-- [[_COMMUNITY_Mdp Pose Post_init__|Mdp Pose Post_init__]]
-- [[_COMMUNITY_Runact Init__ Robot|Runact Init__ Robot]]
-- [[_COMMUNITY_Cpp Aic_controller Cartesian_state|Cpp Aic_controller Cartesian_state]]
-- [[_COMMUNITY_Penalize Position Tracking|Penalize Position Tracking]]
-- [[_COMMUNITY_Packages Set Add_package_runtime_dependencies|Packages Set Add_package_runtime_dependencies]]
-- [[_COMMUNITY_Joint Trajectory Csv|Joint Trajectory Csv]]
-- [[_COMMUNITY_Training_frame_sink Decode_image_from_meta Main|Training_frame_sink Decode_image_from_meta Main]]
-- [[_COMMUNITY_Aic_robot_aic_controller Init__ Types|Aic_robot_aic_controller Init__ Types]]
-- [[_COMMUNITY_Node Clock Sim-time|Node Clock Sim-time]]
-- [[_COMMUNITY_Create_and_cancel_task Createandcanceltasknode Activate_model_node|Create_and_cancel_task Createandcanceltasknode Activate_model_node]]
-- [[_COMMUNITY_Aic_robot Aic_teleop Keyboardendeffectorteleopconfig|Aic_robot Aic_teleop Keyboardendeffectorteleopconfig]]
-- [[_COMMUNITY_Callback Keyboard Listener|Callback Keyboard Listener]]
-- [[_COMMUNITY_Training Lifecycle Data|Training Lifecycle Data]]
-- [[_COMMUNITY_Cableplugin Cleanup Configure|Cableplugin Cleanup Configure]]
-- [[_COMMUNITY_Aicrobotaiccontroller Calibrate Configure|Aicrobotaiccontroller Calibrate Configure]]
-- [[_COMMUNITY_Init__ Get_action Get_action_value|Init__ Get_action Get_action_value]]
-- [[_COMMUNITY_Callback Keyboard Listener|Callback Keyboard Listener]]
-- [[_COMMUNITY_Proximityteacher Normalize Calc_gripper_pose_to_tip_target|Proximityteacher Normalize Calc_gripper_pose_to_tip_target]]
-- [[_COMMUNITY_Runactoffline Insert_cable Get_observation|Runactoffline Insert_cable Get_observation]]
-- [[_COMMUNITY_Bin_to_lossless_webp_prune Camera_index Decode_ros_image|Bin_to_lossless_webp_prune Camera_index Decode_ros_image]]
-- [[_COMMUNITY_Aic_adapter Executable Controllerstate|Aic_adapter Executable Controllerstate]]
-- [[_COMMUNITY_Gentlegiant Moverobotcallback Call__|Gentlegiant Moverobotcallback Call__]]
-- [[_COMMUNITY_Walltoucher Wavearm Init__|Walltoucher Wavearm Init__]]
-- [[_COMMUNITY_Cartesian_impedance_action Cartesianimpedanceaction Cartesianimpedanceparameters|Cartesian_impedance_action Cartesianimpedanceaction Cartesianimpedanceparameters]]
-- [[_COMMUNITY_Bin_to_webp_converter Convert_episode Decode_ros_image|Bin_to_webp_converter Convert_episode Decode_ros_image]]
-- [[_COMMUNITY_Foxglovepreviewpublisher Image_callback Info_callback|Foxglovepreviewpublisher Image_callback Info_callback]]
-- [[_COMMUNITY_Aicspacemouseteleop Apply_deadband Calibrate|Aicspacemouseteleop Apply_deadband Calibrate]]
-- [[_COMMUNITY_Aicteleoperatornode Generate_joint_motion_update Get_key|Aicteleoperatornode Generate_joint_motion_update Get_key]]
-- [[_COMMUNITY_Aiccartesianteleoperatornode Generate_velocity_motion_update Get_key|Aiccartesianteleoperatornode Generate_velocity_motion_update Get_key]]
-- [[_COMMUNITY_Workflow Lerobot Isaac|Workflow Lerobot Isaac]]
-- [[_COMMUNITY_Configuration Sample Scoring|Configuration Sample Scoring]]
-- [[_COMMUNITY_Assets Robot Urdf|Assets Robot Urdf]]
-- [[_COMMUNITY_Scoringtier1 Median Parsestats|Scoringtier1 Median Parsestats]]
-- [[_COMMUNITY_Cheatcodefixed Calc_gripper_pose Init__|Cheatcodefixed Calc_gripper_pose Init__]]
-- [[_COMMUNITY_Cheatcode Calc_gripper_pose Init__|Cheatcode Calc_gripper_pose Init__]]
-- [[_COMMUNITY_Exampleextension Create_cable Import_plugs|Exampleextension Create_cable Import_plugs]]
-- [[_COMMUNITY_Publish_low_bandwidth_previews Episode Capture|Publish_low_bandwidth_previews Episode Capture]]
-- [[_COMMUNITY_Record_demos Main Ratelimiter|Record_demos Main Ratelimiter]]
-- [[_COMMUNITY_Replay_demos Compare_states Main|Replay_demos Compare_states Main]]
-- [[_COMMUNITY_Rsl-rl Parser Args|Rsl-rl Parser Args]]
-- [[_COMMUNITY_Scoring Executable Scoringplugin|Scoring Executable Scoringplugin]]
-- [[_COMMUNITY_Aic_assets Project Ament_cmake|Aic_assets Project Ament_cmake]]
-- [[_COMMUNITY_Offlimitcontactsplugin Configure Createcollisiondata|Offlimitcontactsplugin Configure Createcollisiondata]]
-- [[_COMMUNITY_Joint_impedance_action Compute Configure|Joint_impedance_action Compute Configure]]
-- [[_COMMUNITY_Apply Automated Corrections|Apply Automated Corrections]]
-- [[_COMMUNITY_Mjcf Fixes Load_aic_world|Mjcf Fixes Load_aic_world]]
-- [[_COMMUNITY_Aic_adapter Cpp Aicadapternode|Aic_adapter Cpp Aicadapternode]]
-- [[_COMMUNITY_Parameter Impedance Set|Parameter Impedance Set]]
-- [[_COMMUNITY_Wallpresser That Presses|Wallpresser That Presses]]
-- [[_COMMUNITY_Speeddemon That Moves|Speeddemon That Moves]]
-- [[_COMMUNITY_Gravity_compensation_action Compute Configure|Gravity_compensation_action Compute Configure]]
-- [[_COMMUNITY_Launch Bringup Aic_training_gz_bringup|Launch Bringup Aic_training_gz_bringup]]
-- [[_COMMUNITY_View_scene Launch_viewer Main|View_scene Launch_viewer Main]]
-- [[_COMMUNITY_Zero_agent Main Zero|Zero_agent Main Zero]]
-- [[_COMMUNITY_List_envs Main Print|List_envs Main Print]]
-- [[_COMMUNITY_Random_agent Main Random|Random_agent Main Random]]
-- [[_COMMUNITY_Play Main Rsl-rl|Play Main Rsl-rl]]
-- [[_COMMUNITY_Train Main Rsl-rl|Train Main Rsl-rl]]
-- [[_COMMUNITY_Pporunnercfg Rsl_rl_ppo_cfg Rslrlonpolicyrunnercfg|Pporunnercfg Rsl_rl_ppo_cfg Rslrlonpolicyrunnercfg]]
-- [[_COMMUNITY_Aicadapternode Aic_adapter Hpp|Aicadapternode Aic_adapter Hpp]]
-- [[_COMMUNITY_Aic_engine_interfaces Resetjoints Resetjointsplugin|Aic_engine_interfaces Resetjoints Resetjointsplugin]]
-- [[_COMMUNITY_Aic_model Proximityteacher Runactoffline|Aic_model Proximityteacher Runactoffline]]
-- [[_COMMUNITY_Init__ Submission-ready Variants|Init__ Submission-ready Variants]]
-- [[_COMMUNITY_Aic_controller Hpp|Aic_controller Hpp]]
-- [[_COMMUNITY_Note Add Dependencies|Note Add Dependencies]]
-- [[_COMMUNITY_Cli Common Args|Cli Common Args]]
-- [[_COMMUNITY_Utilities Participant Teleoperation|Utilities Participant Teleoperation]]
-- [[_COMMUNITY_Tier Scoring Topic|Tier Scoring Topic]]
-- [[_COMMUNITY_Converts Ros Image|Converts Ros Image]]
-- [[_COMMUNITY_Called When Insert_cable|Called When Insert_cable]]
+- [[_COMMUNITY_Community 0|Community 0]]
+- [[_COMMUNITY_Community 1|Community 1]]
+- [[_COMMUNITY_Community 2|Community 2]]
+- [[_COMMUNITY_Community 3|Community 3]]
+- [[_COMMUNITY_Community 4|Community 4]]
+- [[_COMMUNITY_Community 5|Community 5]]
+- [[_COMMUNITY_Community 6|Community 6]]
+- [[_COMMUNITY_Community 7|Community 7]]
+- [[_COMMUNITY_Community 8|Community 8]]
+- [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
+- [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
+- [[_COMMUNITY_Community 13|Community 13]]
+- [[_COMMUNITY_Community 14|Community 14]]
+- [[_COMMUNITY_Community 15|Community 15]]
+- [[_COMMUNITY_Community 16|Community 16]]
+- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 18|Community 18]]
+- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 21|Community 21]]
+- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
+- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 38|Community 38]]
+- [[_COMMUNITY_Community 39|Community 39]]
+- [[_COMMUNITY_Community 40|Community 40]]
+- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
+- [[_COMMUNITY_Community 43|Community 43]]
+- [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
+- [[_COMMUNITY_Community 49|Community 49]]
+- [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 57|Community 57]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 59|Community 59]]
+- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
+- [[_COMMUNITY_Community 62|Community 62]]
+- [[_COMMUNITY_Community 63|Community 63]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 65|Community 65]]
+- [[_COMMUNITY_Community 66|Community 66]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 71|Community 71]]
+- [[_COMMUNITY_Community 72|Community 72]]
+- [[_COMMUNITY_Community 73|Community 73]]
+- [[_COMMUNITY_Community 74|Community 74]]
+- [[_COMMUNITY_Community 75|Community 75]]
+- [[_COMMUNITY_Community 76|Community 76]]
+- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 90|Community 90]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `ProximityDataGenerator` - 40 edges
-2. `AicModel` - 22 edges
-3. `ComputeScore()` - 17 edges
-4. `Policy` - 17 edges
-5. `MoveRobotCallback` - 14 edges
-6. `CreateAndCancelTaskNode` - 13 edges
-7. `TrainingFrameSink` - 12 edges
-8. `AICRobotAICController` - 12 edges
-9. `update()` - 11 edges
-10. `handle_trial()` - 11 edges
+2. `AicModel` - 23 edges
+3. `ComputeScore()` - 18 edges
+4. `Policy` - 18 edges
+5. `MoveRobotCallback` - 15 edges
+6. `TrainingFrameSink` - 15 edges
+7. `CreateAndCancelTaskNode` - 14 edges
+8. `AICRobotAICController` - 13 edges
+9. `update()` - 12 edges
+10. `handle_trial()` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `CheatCodeFixed` --uses--> `MoveRobotCallback`  [INFERRED]
-  aic_example_policies/aic_example_policies/ros/CheatCodeFixed.py → aic_model/aic_model/policy.py
-- `CheatCodeFixed` --uses--> `Policy`  [INFERRED]
-  aic_example_policies/aic_example_policies/ros/CheatCodeFixed.py → aic_model/aic_model/policy.py
-- `WaveArm` --uses--> `MoveRobotCallback`  [INFERRED]
-  aic_example_policies/aic_example_policies/ros/WaveArm.py → aic_model/aic_model/policy.py
-- `WaveArm` --uses--> `Policy`  [INFERRED]
-  aic_example_policies/aic_example_policies/ros/WaveArm.py → aic_model/aic_model/policy.py
-- `SpeedDemon` --uses--> `Policy`  [INFERRED]
-  aic_example_policies/aic_example_policies/ros/SpeedDemon.py → aic_model/aic_model/policy.py
+- `ACT-First Learned Policy Plan` --conceptually_related_to--> `RunACT Example Policy`  [INFERRED]
+  planning/overall_aic_competition_plan.md → aic_example_policies/README.md
+- `aic_model Policy Framework` --conceptually_related_to--> `WaveArm Example Policy`  [INFERRED]
+  README.md → aic_example_policies/README.md
+- `Joint Keyboard Teleoperation Mode` --conceptually_related_to--> `AIC Controller Impedance Settings`  [INFERRED]
+  aic_utils/aic_teleoperation/README.md → aic_bringup/config/aic_ros2_controllers.yaml
+- `ScoringPlugin` --conceptually_related_to--> `aic_scoring Shared Library`  [INFERRED]
+  aic_gazebo/CMakeLists.txt → aic_scoring/CMakeLists.txt
+- `CablePlugin` --conceptually_related_to--> `Trial Scene Definitions`  [INFERRED]
+  aic_gazebo/CMakeLists.txt → aic_engine/config/sample_config.yaml
 
 ## Hyperedges (group relationships)
 - **Policy-to-Controller Interface Stack** — policy_policy_integration_doc, aic_interfaces_ai_challenge_interfaces_doc, aic_controller_aic_controller_doc, aic_interfaces_observation_message, aic_interfaces_motionupdate_interface, aic_interfaces_jointmotionupdate_interface [INFERRED 0.87]
@@ -123,197 +139,213 @@
 - **Simulation-to-Scoring Feedback Loop** — aic_gazebo_off_limit_contacts_plugin, aic_engine_scoring_topics_manifest, aic_scoring_scoring_library [INFERRED 0.76]
 - **ROS 2 Package Build Configuration** — cmakelists_aic_assets_project, cmakelists_ament_cmake, cmakelists_ament_package [INFERRED 0.81]
 
-## Communities (108 total, 28 thin omitted)
+## Communities (123 total, 35 thin omitted)
 
-### Community 0 - "Example Scoring Tier"
+### Community 0 - "Community 0"
+Cohesion: 0.05
+Nodes (30): KeyboardEndEffectorTeleop, KeyboardEndEffectorTeleopConfig, KeyboardJointTeleop, KeyboardJointTeleopConfig, action_features(), AICRobotAICController, AICRobotAICControllerConfig, AICRos2Interface (+22 more)
+
+### Community 1 - "Community 1"
 Cohesion: 0.06
 Nodes (50): ACT-First Learned Policy Plan, add_cable_plugin Refinement Flow, AIC Controller Impedance Settings, AIC Engine Orchestrator, aic_gz_bringup Launch Environment, aic_model Policy Framework, aic_bringup CMakeLists, AIC ROS2 Controllers Config (+42 more)
 
-### Community 1 - "Proximity_data_generator Decode_image_from_meta Episodespec"
-Cohesion: 0.09
-Nodes (8): _decode_image_from_meta(), EpisodeSpec, main(), _postprocess_episode_images(), ProximityDataGenerator, _rpy_to_quat(), _stamp_to_sec(), _task_to_dict()
+### Community 2 - "Community 2"
+Cohesion: 0.08
+Nodes (9): _decode_image_from_meta(), EpisodeSpec, main(), _postprocess_episode_images(), ProximityDataGenerator, _rpy_to_quat(), _stamp_to_sec(), _task_to_dict() (+1 more)
 
-### Community 2 - "Main Init__ Node"
-Cohesion: 0.06
-Nodes (18): main(), SceneMarkerPublisher, main(), TFTreeDumper, Node, HomeTrajectoryNode, main(), main() (+10 more)
-
-### Community 3 - "Challenge Evaluation Board"
+### Community 3 - "Community 3"
 Cohesion: 0.08
 Nodes (46): Access Control, Zenoh ACL Enforcement, aic_controller Documentation, Controller Impedance Pipeline, AI Challenge Interfaces, InsertCable Action Interface, JointMotionUpdate Command Interface, MotionUpdate Command Interface (+38 more)
 
-### Community 4 - "Scoringtier2 Calculateinverseproportionalscore Computescore"
-Cohesion: 0.11
-Nodes (29): CalculateInverseProportionalScore(), ComputeScore(), ComputeTier3Score(), ContactsCallback(), ControllerStateCallback(), EndEffectorPose(), GetContactsScore(), GetDistanceScore() (+21 more)
-
-### Community 5 - "Aic_engine Cpp Hpp"
-Cohesion: 0.13
-Nodes (30): activate_model_node(), calculate_total_score(), check_endpoints(), check_model(), cleanup_model_node(), configure_model_node(), deactivate_model_node(), Engine() (+22 more)
-
-### Community 6 - "Mdp Pose Post_init__"
+### Community 4 - "Community 4"
 Cohesion: 0.06
+Nodes (16): main(), SceneMarkerPublisher, main(), TFTreeDumper, Node, HomeTrajectoryNode, main(), main() (+8 more)
+
+### Community 5 - "Community 5"
+Cohesion: 0.08
 Nodes (29): ActionsCfg, AICTaskEnvCfg, AICTaskSceneCfg, CommandsCfg, EventCfg, ObservationsCfg, PolicyCfg, Command terms for the MDP. (+21 more)
 
-### Community 7 - "Runact Init__ Robot"
+### Community 6 - "Community 6"
+Cohesion: 0.15
+Nodes (35): CalculateInverseProportionalScore(), ComputeScore(), ComputeTier3Score(), ContactsCallback(), ControllerStateCallback(), deserialize_from_rosbag(), EndEffectorPose(), GetContactsScore() (+27 more)
+
+### Community 7 - "Community 7"
+Cohesion: 0.17
+Nodes (33): activate_model_node(), calculate_total_score(), check_endpoints(), check_model(), cleanup_model_node(), configure_model_node(), deactivate_model_node(), Engine() (+25 more)
+
+### Community 8 - "Community 8"
 Cohesion: 0.08
 Nodes (7): AicModel, main(), Set a motion target for the robot.          There are two ways to move the robot, LifecycleNode, _img_to_tensor(), Convert ROS Observation message into dictionary of normalized tensors., RunACT
 
-### Community 8 - "Cpp Aic_controller Cartesian_state"
-Cohesion: 0.12
-Nodes (16): clamp_joint_reference_to_limits(), clamp_reference_to_limits(), interpolate_impedance_parameters(), on_activate(), on_configure(), populate_cartesian_limits(), populate_controller_state(), read_state_from_hardware() (+8 more)
+### Community 9 - "Community 9"
+Cohesion: 0.11
+Nodes (17): _camera_info_to_dict(), _decode_image_from_meta(), _generate_visibility_occlusion_labels(), _intrinsics_from_camera_info(), _label_unavailable(), main(), _point_from_transform(), _pose_to_dict() (+9 more)
 
-### Community 9 - "Penalize Position Tracking"
-Cohesion: 0.08
+### Community 10 - "Community 10"
+Cohesion: 0.16
+Nodes (23): clamp_joint_reference_to_limits(), clamp_reference_to_limits(), command_interface_configuration(), Controller(), interpolate_impedance_parameters(), on_activate(), on_cleanup(), on_configure() (+15 more)
+
+### Community 11 - "Community 11"
+Cohesion: 0.1
 Nodes (22): contact_net_forces(), Net contact forces (world frame) from the contact sensor, flattened for policy o, body_lin_acc_l2(), ee_reaching_bonus(), joint_acc_l2(), joint_pos_limits(), joint_torques_l2(), orientation_command_error() (+14 more)
 
-### Community 10 - "Packages Set Add_package_runtime_dependencies"
-Cohesion: 0.2
+### Community 12 - "Community 12"
+Cohesion: 0.26
 Nodes (18): add_package_runtime_dependencies(), _append_unique_value(), get_commands(), get_packages(), handle_dsv_types_except_source(), _include_comments(), main(), order_packages() (+10 more)
 
-### Community 11 - "Joint Trajectory Csv"
+### Community 13 - "Community 13"
 Cohesion: 0.15
 Nodes (12): compare_trajectories(), _load_csv(), main(), ROS2 node for recording joint state trajectories during test commands., Record joint state if recording is active., Switch the controller to joint impedance mode., Send a joint position command via the impedance controller., Execute the full test sequence. (+4 more)
 
-### Community 12 - "Training_frame_sink Decode_image_from_meta Main"
-Cohesion: 0.18
-Nodes (5): _decode_image_from_meta(), main(), _pose_to_dict(), _stamp_to_sec(), TrainingFrameSink
-
-### Community 13 - "Aic_robot_aic_controller Init__ Types"
-Cohesion: 0.15
-Nodes (6): AICRobotAICControllerConfig, AICRos2Interface, CameraImageScaling, connect(), RobotConfig, TypedDict
-
-### Community 14 - "Node Clock Sim-time"
+### Community 14 - "Community 14"
 Cohesion: 0.23
-Nodes (5): ABC, Policy, Return the current time from the node's clock (sim-time aware)., Sleep for the given duration using the node's clock (sim-time aware)., Invoke the move_robot callback to request the supplied Pose.          This is a
+Nodes (6): ABC, insert_cable(), Policy, Return the current time from the node's clock (sim-time aware)., Sleep for the given duration using the node's clock (sim-time aware)., Invoke the move_robot callback to request the supplied Pose.          This is a
 
-### Community 16 - "Aic_robot Aic_teleop Keyboardendeffectorteleopconfig"
-Cohesion: 0.15
-Nodes (6): KeyboardEndEffectorTeleopConfig, KeyboardJointTeleopConfig, AICKeyboardEETeleopConfig, AICKeyboardJointTeleopConfig, AICSpaceMouseTeleopConfig, TeleoperatorConfig
-
-### Community 17 - "Callback Keyboard Listener"
-Cohesion: 0.23
+### Community 16 - "Community 16"
+Cohesion: 0.22
 Nodes (4): AICCartesianTeleoperatorNode, main(), Callback for keyboard listener when a key is pressed., Callback for keyboard listener when a key is released.
 
-### Community 18 - "Training Lifecycle Data"
+### Community 17 - "Community 17"
+Cohesion: 0.38
+Nodes (10): Cleanup(), Configure(), findLinkInModel(), IsModelValid(), MakeStatic(), PostUpdate(), PreUpdate(), Reset() (+2 more)
+
+### Community 18 - "Community 18"
+Cohesion: 0.23
+Nodes (4): AICTeleoperatorNode, main(), Callback for keyboard listener when a key is pressed., Callback for keyboard listener when a key is released.
+
+### Community 19 - "Community 19"
 Cohesion: 0.21
 Nodes (12): Training Campaign Runbook, Lifecycle Model Validation, aic_engine README, Engine Trial State Machine, Frame Sink Sidecar Pipeline, Training Data Generator Plan, Isolated Training Runtime Policy, Lifecycle Retry and Timeout Guardrails (+4 more)
 
-### Community 19 - "Cableplugin Cleanup Configure"
-Cohesion: 0.27
-Nodes (6): Cleanup(), findLinkInModel(), IsModelValid(), MakeStatic(), PreUpdate(), SpawnCableGuard()
-
-### Community 21 - "Init__ Get_action Get_action_value"
-Cohesion: 0.22
-Nodes (4): KeyboardEndEffectorTeleop, KeyboardJointTeleop, AICKeyboardEETeleop, AICKeyboardJointTeleop
-
-### Community 22 - "Callback Keyboard Listener"
-Cohesion: 0.24
-Nodes (4): AICTeleoperatorNode, main(), Callback for keyboard listener when a key is pressed., Callback for keyboard listener when a key is released.
-
-### Community 23 - "Proximityteacher Normalize Calc_gripper_pose_to_tip_target"
-Cohesion: 0.36
+### Community 20 - "Community 20"
+Cohesion: 0.35
 Nodes (4): _normalize(), ProximityTeacher, Training-only teacher that reaches no-contact standoff from target port., _xyz()
 
-### Community 25 - "Bin_to_lossless_webp_prune Camera_index Decode_ros_image"
-Cohesion: 0.38
+### Community 21 - "Community 21"
+Cohesion: 0.18
+Nodes (4): Policy, GentleGiant, Policy that moves the arm slowly and smoothly using low stiffness     and high d, WaveArm
+
+### Community 23 - "Community 23"
+Cohesion: 0.35
+Nodes (7): CartesianImpedanceAction(), CartesianImpedanceParameters(), compute(), compute_nullspace_torque(), compute_smooth_right_pseudo_inverse(), configure(), single_joint_avoidance_torque()
+
+### Community 24 - "Community 24"
+Cohesion: 0.47
 Nodes (9): camera_index(), decode_ros_image(), _emit_progress(), find_episode_dirs(), main(), parse_args(), process_episode(), _progress() (+1 more)
 
-### Community 26 - "Aic_adapter Executable Controllerstate"
+### Community 25 - "Community 25"
+Cohesion: 0.2
+Nodes (5): MoveRobotCallback, Move the robot using either Cartesian or joint-space commands.      This functio, Protocol, Policy that moves the arm rapidly with high stiffness and low     damping, produ, SpeedDemon
+
+### Community 26 - "Community 26"
+Cohesion: 0.51
+Nodes (8): convert_episode(), decode_ros_image(), episode_number(), list_episode_dirs(), main(), parse_args(), parse_episode_list(), should_convert_episode()
+
+### Community 31 - "Community 31"
 Cohesion: 0.29
 Nodes (10): aic_adapter Executable, ControllerState Message, JointMotionUpdate Message, MotionUpdate Message, aic_control_interfaces Package, aic_controller Library, Scoring Topic Subscription Manifest, OffLimitContactsPlugin (+2 more)
 
-### Community 27 - "Gentlegiant Moverobotcallback Call__"
-Cohesion: 0.22
-Nodes (5): MoveRobotCallback, Move the robot using either Cartesian or joint-space commands.      This functio, Protocol, GentleGiant, Policy that moves the arm slowly and smoothly using low stiffness     and high d
+### Community 32 - "Community 32"
+Cohesion: 0.44
+Nodes (7): Median(), ParseStats(), ScoringTier1(), Stats(), TopicCallback(), TopicStatsTier1(), Update()
 
-### Community 28 - "Walltoucher Wavearm Init__"
-Cohesion: 0.22
-Nodes (4): Policy, Policy that uses joint-space control to extend the robot arm     into an enclosu, WallToucher, WaveArm
-
-### Community 29 - "Cartesian_impedance_action Cartesianimpedanceaction Cartesianimpedanceparameters"
-Cohesion: 0.31
-Nodes (5): CartesianImpedanceAction(), compute(), compute_nullspace_torque(), compute_smooth_right_pseudo_inverse(), single_joint_avoidance_torque()
-
-### Community 30 - "Bin_to_webp_converter Convert_episode Decode_ros_image"
-Cohesion: 0.42
-Nodes (8): convert_episode(), decode_ros_image(), episode_number(), list_episode_dirs(), main(), parse_args(), parse_episode_list(), should_convert_episode()
-
-### Community 35 - "Workflow Lerobot Isaac"
+### Community 34 - "Community 34"
 Cohesion: 0.28
-Nodes (9): AIC-Task-v0 Environment, Isaac Lab Demo Recording Workflow, Isaac Lab RL Training Workflow, Isaac Lab Teleoperation Workflow, LeRobot Official Documentation, LeRobot Recording Workflow, Target Mode Requirement Rationale, LeRobot Teleoperation Workflow (+1 more)
+Nodes (3): CheatCode, Wait for a TF frame to become available., Find the gripper pose that results in plug alignment.
 
-### Community 36 - "Configuration Sample Scoring"
-Cohesion: 0.28
-Nodes (9): Sample Scoring Configuration, Trial Task Definitions, InsertCable Action, aic_task_interfaces Package, Task Message, eval Service, Internal Docker Network, model Service (+1 more)
-
-### Community 37 - "Assets Robot Urdf"
+### Community 36 - "Community 36"
 Cohesion: 0.22
 Nodes (9): Robot URDF and World Assets, Trial Scene Definitions, publish_scene_markers.py, CablePlugin, WorldSdfGeneratorPlugin, aic_task 0.1.0 Initial Template Entry, Future SDF-to-USD Export Pipeline, AIC Isaac Lab Integration Workflow (+1 more)
 
-### Community 38 - "Scoringtier1 Median Parsestats"
-Cohesion: 0.32
-Nodes (3): Median(), TopicCallback(), Update()
+### Community 37 - "Community 37"
+Cohesion: 0.28
+Nodes (9): Sample Scoring Configuration, Trial Task Definitions, InsertCable Action, aic_task_interfaces Package, Task Message, eval Service, Internal Docker Network, model Service (+1 more)
 
-### Community 40 - "Cheatcode Calc_gripper_pose Init__"
-Cohesion: 0.32
-Nodes (3): CheatCode, Wait for a TF frame to become available., Find the gripper pose that results in plug alignment.
+### Community 38 - "Community 38"
+Cohesion: 0.28
+Nodes (9): AIC-Task-v0 Environment, Isaac Lab Demo Recording Workflow, Isaac Lab RL Training Workflow, Isaac Lab Teleoperation Workflow, LeRobot Official Documentation, LeRobot Recording Workflow, Target Mode Requirement Rationale, LeRobot Teleoperation Workflow (+1 more)
 
-### Community 42 - "Publish_low_bandwidth_previews Episode Capture"
+### Community 39 - "Community 39"
+Cohesion: 0.36
+Nodes (4): compute(), configure(), JointImpedanceAction(), JointImpedanceParameters()
+
+### Community 40 - "Community 40"
+Cohesion: 0.36
+Nodes (4): main(), RateLimiter, Convenience class for enforcing rates in loops., Collect demonstrations from the environment using teleop interfaces.
+
+### Community 41 - "Community 41"
+Cohesion: 0.39
+Nodes (6): compare_states(), main(), pause_cb(), play_cb(), Compare states from dataset and runtime.      Returns:         Tuple of (states_, Replay episodes loaded from a file.
+
+### Community 42 - "Community 42"
+Cohesion: 0.36
+Nodes (6): add_rsl_rl_args(), parse_rsl_rl_cfg(), Add RSL-RL arguments to the parser.      Args:         parser: The parser to add, Parse configuration for RSL-RL agent based on inputs.      Args:         task_na, Update configuration for RSL-RL agent based on inputs.      Args:         agent_, update_rsl_rl_cfg()
+
+### Community 43 - "Community 43"
 Cohesion: 0.25
 Nodes (8): publish_low_bandwidth_previews.py, Episode Capture Services, aic_training_interfaces Package, bin_to_webp_converter.py, aic_training_utils Package, proximity_data_generator.py, training_frame_sink.py, xacro_expander.py
 
-### Community 43 - "Record_demos Main Ratelimiter"
+### Community 44 - "Community 44"
+Cohesion: 0.62
+Nodes (5): Configure(), CreateCollisionData(), InitializeOffLimitEntities(), ParseSDF(), PreUpdate()
+
+### Community 45 - "Community 45"
+Cohesion: 0.48
+Nodes (5): eigen_to_wrench_msg(), exp_map_quaternion(), integrate_pose(), log_map_quaternion(), wrench_msg_to_eigen()
+
+### Community 46 - "Community 46"
 Cohesion: 0.38
-Nodes (4): main(), RateLimiter, Convenience class for enforcing rates in loops., Collect demonstrations from the environment using teleop interfaces.
+Nodes (3): compute(), configure(), GravityCompensationAction()
 
-### Community 44 - "Replay_demos Compare_states Main"
-Cohesion: 0.33
-Nodes (4): compare_states(), main(), Compare states from dataset and runtime.      Returns:         Tuple of (states_, Replay episodes loaded from a file.
+### Community 47 - "Community 47"
+Cohesion: 0.48
+Nodes (5): main(), postprocess_robot_xml(), postprocess_world_xml(), Apply automated corrections to world XML (replaces manual edits)., Apply automated corrections to robot XML (replaces manual edits).
 
-### Community 45 - "Rsl-rl Parser Args"
-Cohesion: 0.33
-Nodes (6): add_rsl_rl_args(), parse_rsl_rl_cfg(), Add RSL-RL arguments to the parser.      Args:         parser: The parser to add, Parse configuration for RSL-RL agent based on inputs.      Args:         task_na, Update configuration for RSL-RL agent based on inputs.      Args:         agent_, update_rsl_rl_cfg()
+### Community 48 - "Community 48"
+Cohesion: 0.48
+Nodes (5): apply_post_processing_fixes(), convert_sdf_to_mjcf(), main(), Convert an SDF file to MuJoCo MJCF format using sdformat_mjcf.      Args:, Apply manual fixes to the generated MJCF files.      TODO: Automate common fixes
 
-### Community 46 - "Scoring Executable Scoringplugin"
+### Community 49 - "Community 49"
+Cohesion: 0.57
+Nodes (5): AicAdapterNode(), image_callback(), main(), ReorderJointArray(), ReorderJointState()
+
+### Community 50 - "Community 50"
 Cohesion: 0.29
 Nodes (7): ScoringPlugin, aic_scoring Shared Library, scoring_tier1_main Executable, scoring_tier2_main Executable, Tiered Scoring Pipeline, Scoring Failure Messages, Scoring Result Report Template
 
-### Community 47 - "Aic_assets Project Ament_cmake"
+### Community 51 - "Community 51"
 Cohesion: 0.38
 Nodes (7): aic_assets CMakeLists, aic_assets project, ament_cmake, ament_environment_hooks, ament_package, models directory, ${PROJECT_NAME}.dsv.in hook template
 
-### Community 48 - "Offlimitcontactsplugin Configure Createcollisiondata"
+### Community 52 - "Community 52"
 Cohesion: 0.53
-Nodes (5): Configure(), CreateCollisionData(), InitializeOffLimitEntities(), ParseSDF(), PreUpdate()
+Nodes (4): Configure(), PreUpdate(), Reset(), ~ResetJointsPlugin()
 
-### Community 51 - "Apply Automated Corrections"
-Cohesion: 0.47
-Nodes (5): main(), postprocess_robot_xml(), postprocess_world_xml(), Apply automated corrections to world XML (replaces manual edits)., Apply automated corrections to robot XML (replaces manual edits).
-
-### Community 52 - "Mjcf Fixes Load_aic_world"
-Cohesion: 0.47
-Nodes (5): apply_post_processing_fixes(), convert_sdf_to_mjcf(), main(), Convert an SDF file to MuJoCo MJCF format using sdformat_mjcf.      Args:, Apply manual fixes to the generated MJCF files.      TODO: Automate common fixes
-
-### Community 53 - "Aic_adapter Cpp Aicadapternode"
-Cohesion: 0.47
-Nodes (3): AicAdapterNode(), image_callback(), ReorderJointState()
-
-### Community 54 - "Parameter Impedance Set"
+### Community 55 - "Community 55"
 Cohesion: 0.33
 Nodes (6): ChangeTargetMode Service, Clamp-to-Limits Safety Parameters, Cartesian Impedance Parameter Set, Joint Impedance Parameter Set, aic_controller_parameters Library, Controller Target Mode Parameter
 
-### Community 61 - "Launch Bringup Aic_training_gz_bringup"
+### Community 56 - "Community 56"
+Cohesion: 0.6
+Nodes (3): Configure(), PreUpdate(), Reset()
+
+### Community 57 - "Community 57"
+Cohesion: 0.6
+Nodes (3): generate_launch_description(), launch_setup(), on_aic_engine_exit()
+
+### Community 58 - "Community 58"
 Cohesion: 0.5
 Nodes (3): generate_launch_description(), Training bringup for Gazebo-based AIC workflows., Launch the standard Gazebo bringup together with training-only tools.
 
-### Community 62 - "View_scene Launch_viewer Main"
-Cohesion: 0.67
+### Community 59 - "Community 59"
+Cohesion: 0.6
 Nodes (3): launch_viewer(), main(), Load MuJoCo scene and launch interactive viewer.      Args:         scene_path:
 
-### Community 74 - "Aic_engine_interfaces Resetjoints Resetjointsplugin"
+### Community 80 - "Community 80"
 Cohesion: 0.67
 Nodes (3): aic_engine_interfaces Package, ResetJoints Service, ResetJointsPlugin
 
-### Community 75 - "Aic_model Proximityteacher Runactoffline"
+### Community 81 - "Community 81"
 Cohesion: 1.0
 Nodes (3): aic_model policy.py Interface, ProximityTeacher Policy, RunACTOffline Policy
 
@@ -328,9 +360,9 @@ Nodes (3): aic_model policy.py Interface, ProximityTeacher Policy, RunACTOffline
   aic_utils/aic_training_utils/CMakeLists.txt · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **132 isolated node(s):** `Find packages based on colcon-specific files created during installation.      :`, `Check the path and if it exists extract the packages runtime dependencies.`, `Order packages topologically.      :param dict packages: A mapping from package`, `Reduce the set of packages to the ones part of the circular dependency.      :pa`, `CheatCode variant with corrected quaternion math and tighter runtime behavior.` (+127 more)
+- **128 isolated node(s):** `Find packages based on colcon-specific files created during installation.      :`, `Check the path and if it exists extract the packages runtime dependencies.`, `Order packages topologically.      :param dict packages: A mapping from package`, `Reduce the set of packages to the ones part of the circular dependency.      :pa`, `CheatCode variant with corrected quaternion math and tighter runtime behavior.` (+123 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -343,9 +375,9 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `proximity_data_generator.py` and `Episode Capture Services`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `ProximityDataGenerator` connect `Proximity_data_generator Decode_image_from_meta Episodespec` to `Main Init__ Node`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
-- **Why does `AICRobotAICController` connect `Aicrobotaiccontroller Calibrate Configure` to `Runactoffline Insert_cable Get_observation`, `Aic_robot_aic_controller Init__ Types`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `SimComparisonNode` connect `Joint Trajectory Csv` to `Main Init__ Node`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `TrainingFrameSink` connect `Community 9` to `Community 4`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **Why does `ProximityDataGenerator` connect `Community 2` to `Community 4`?**
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **Are the 9 inferred relationships involving `Policy` (e.g. with `CheatCodeFixed` and `WaveArm`) actually correct?**
+  _`Policy` has 9 INFERRED edges - model-reasoned connections that need verification._

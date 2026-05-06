@@ -246,6 +246,12 @@ class ProximityDataGenerator(Node):
         self.prev_episode_first_tcp_xyz: tuple[float, float, float] | None = None
         self.prev_episode_index: int | None = None
         self.postprocess_executor: ThreadPoolExecutor | None = None
+        if self.use_frame_sink and self.postprocess_webp_after_episode:
+            self.get_logger().warn(
+                "postprocess_webp_after_episode is ignored when use_frame_sink=true; "
+                "frame sink owns async image/postprocess pipeline."
+            )
+            self.postprocess_webp_after_episode = False
         self.postprocess_futures: list[Future] = []
         if self.postprocess_webp_after_episode:
             self.postprocess_executor = ThreadPoolExecutor(
@@ -1412,10 +1418,15 @@ class ProximityDataGenerator(Node):
         commit = os.environ.get("AIC_GIT_COMMIT", "unknown")
         manifest = {
             "generator": "proximity_data_generator",
-            "version": "v1",
+            "version": "v2",
+            "frame_schema_version": "visual_proximity_v1",
             "num_episodes": self.num_episodes,
             "seed": self.seed,
             "task_time_limit_s": self.task_time_limit_s,
+            "use_frame_sink": self.use_frame_sink,
+            "frame_sink_service_ns": self.frame_sink_service_ns,
+            "frame_sink_require_webp_done": self.frame_sink_require_webp_done,
+            "frame_sink_flush_timeout_s": self.frame_sink_flush_timeout_s,
             "postprocess_webp_after_episode": self.postprocess_webp_after_episode,
             "postprocess_delete_bin_after_webp": self.postprocess_delete_bin_after_webp,
             "postprocess_workers": self.postprocess_workers,

@@ -1,11 +1,11 @@
 # Training Data Generator Plan
 
-Last updated: 2026-05-04
+Last updated: 2026-05-06
 
 ## Objective
 Run ProximityTeacher data generation with split architecture:
 1. Generator is control-plane only.
-2. `training_frame_sink.py` handles frame write + online lossless WebP conversion + bin purge.
+2. `training_frame_sink.py` handles frame write + online lossless WebP conversion + bin purge + async visibility-label post-processing.
 3. All `ros2` and `python3` commands use `pixi run -- ...`.
 4. Use `enter_new_eval.sh` once to create the first eval runtime, then `enter_eval.sh` for all additional terminals.
 5. Episode teardown follows organizer sequencing: deactivate `aic_model` -> delete `cable_0`/`task_board` -> reset joints -> next episode re-activates model before action.
@@ -14,13 +14,15 @@ Run ProximityTeacher data generation with split architecture:
 8. Each frame capture now records all metadata required for C3/C4/C5 supervision, including per-frame camera calibration, controller kinematics terms (`tcp_velocity`, `tcp_error`), and training-only GT port transforms.
 9. Visibility/occlusion tags are generated as a required post-processing step from stored GT geometry + camera projection consistency.
 
-## Exact Setup (Eval Container Only)
-Terminal 1 (host: create fresh first eval runtime):
+## Exact Start Procedure (Eval Container Only)
+Run in this exact order.
+
+Terminal 1 (host: create fresh eval runtime once):
 ```bash
 AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_new_eval.sh
 ```
 
-Terminal 2 (host: join existing eval runtime for bringup):
+Terminal 2 (host: join runtime for sim bringup):
 ```bash
 AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
 ```
@@ -41,7 +43,7 @@ export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
   launch_rviz:=false
 ```
 
-Terminal 3 (host: join existing eval runtime for xacro service):
+Terminal 3 (host: join runtime for xacro service):
 ```bash
 AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
 ```
@@ -57,7 +59,7 @@ pkill -f xacro_expander.py || true
 python3 /home/user/aic/aic_utils/aic_training_utils/scripts/xacro_expander.py
 ```
 
-Terminal 4 (host: join existing eval runtime for model):
+Terminal 4 (host: join runtime for ProximityTeacher model):
 ```bash
 AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
 ```
@@ -74,7 +76,7 @@ pixi run -- ros2 run aic_model aic_model --ros-args \
   -p policy:=aic_model.policies.ProximityTeacher
 ```
 
-Terminal 5 (host: join existing eval runtime for frame sink):
+Terminal 5 (host: join runtime for training frame sink):
 ```bash
 AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
 ```
@@ -90,11 +92,15 @@ pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/training
   -p max_pending_frames:=128 \
   -p write_workers:=2 \
   -p convert_workers:=4 \
+  -p postprocess_workers:=1 \
+  -p postprocess_visibility_labels:=true \
+  -p postprocess_labels_filename:=labels_visibility_occlusion.jsonl \
+  -p wait_for_postprocess_on_stop:=false \
   -p keep_every_nth_bin:=0 \
   -p images_output_subdir:=images_debug
 ```
 
-Terminal 6 (host: join existing eval runtime for generator):
+Terminal 6 (host: join runtime for generator):
 ```bash
 AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
 ```
@@ -107,9 +113,9 @@ export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
 /home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args \
-  -p num_episodes:=500 \
-  -p seed:=22000123 \
-  -p output_root:=/home/user/training_data/visual_motor_policy/training_dataset \
+  -p num_episodes:=10 \
+  -p seed:=42 \
+  -p output_root:=/home/user/training_data/visual_motor_policy/debug \
   -p use_frame_sink:=true \
   -p frame_sink_service_ns:=/training_frame_sink \
   -p frame_sink_require_webp_done:=true \
@@ -119,6 +125,11 @@ export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
   -p lifecycle_transition_retries:=3 \
   -p reset_joints_after_episode:=true
 ```
+
+## Postprocess Ownership
+1. In split mode (`use_frame_sink:=true`), `training_frame_sink.py` owns image conversion and post-processing.
+2. Generator-side `postprocess_webp_after_episode` is ignored in split mode by design.
+3. Post-processing runs asynchronously after each episode stop and does not block the next episode by default.
 
 ## Build Step (Only After Interface/Script Changes)
 In one joined eval terminal:
@@ -164,24 +175,37 @@ source install/setup.bash
   - `t_base_target_port_entrance_gt`
   - optional full visible-port GT list for distractor-aware supervision
 
+Guaranteed per-frame aliases (top-level):
+- `tcp_velocity`
+- `tcp_error`
+- `left_camera_info`
+- `center_camera_info`
+- `right_camera_info`
+- `t_base_target_port_link_gt`
+- `t_base_target_port_entrance_gt`
+
 `labels_visibility_occlusion.jsonl` must be produced per episode during post-processing:
 - per camera, per labeled keypoint (`port_link`, `port_entrance`, auxiliary landmarks):
   - `visibility`: `visible|occluded|out_of_fov|truncated`
   - projection diagnostics: projected pixel, in-bounds flag, positive-depth flag
   - optional reprojection residual field for quality auditing
 
-## Required Steps To Perform Now (Plan Update)
-1. Update `training_frame_sink.py` serialization to include per-frame:
-   - `left/center/right_camera_info`
-   - `controller_state.tcp_velocity`
-   - `controller_state.tcp_error`
-2. Update generator-side per-frame metadata writing to include:
-   - task fields copied into each frame record
-   - per-frame training-only GT transforms for target port link and entrance.
-3. Add/enable post-processing job that reads `frames.jsonl` + GT transforms and writes:
-   - `labels_visibility_occlusion.jsonl` for C3/C4/C5 training use.
-4. Keep camera info per frame even if values are typically constant across runs to preserve timestamped traceability and avoid ambiguity when calibration changes.
-5. Ensure all new fields are schema-versioned in run manifest for reproducible retraining.
+## Verification Commands
+Run these after generator starts:
+```bash
+pixi run -- ros2 service info /training_frame_sink/start_episode_capture
+pixi run -- ros2 service info /training_frame_sink/stop_episode_capture
+pixi run -- ros2 service info /training_frame_sink/capture_status
+pixi run -- ros2 service call /training_frame_sink/capture_status aic_training_interfaces/srv/CaptureStatus "{episode_id: ''}"
+```
+
+After at least one episode:
+```bash
+RUN_DIR=$(ls -dt /home/user/training_data/visual_motor_policy/debug/run_20260506_063957 | head -n 1)
+EP_DIR=$(ls -dt "$RUN_DIR"/episodes/episode_* | head -n 1)
+head -n 1 "$EP_DIR/frames.jsonl" | jq '{frame_idx, tcp_velocity, tcp_error, left_camera_info: (.left_camera_info|keys), gt_keys: {port_link: .t_base_target_port_link_gt, port_entrance: .t_base_target_port_entrance_gt}}'
+test -f "$EP_DIR/labels_visibility_occlusion.jsonl" && echo "labels file exists"
+```
 
 ## Hard Guardrails
 1. Always start with `enter_new_eval.sh` once, then only `enter_eval.sh` for additional terminals.
@@ -199,3 +223,4 @@ source install/setup.bash
 - 2026-05-06: Updated generator to randomize NIC mount count per episode (`1..5`), keep one task target port, and store all mount/port locations for distractor-aware training.
 - 2026-05-06: Updated plan to require per-frame `CameraInfo`, `tcp_velocity`, `tcp_error`, and training-only GT `port_link`/`port_entrance` transforms in `frames.jsonl`.
 - 2026-05-06: Added required post-processing output `labels_visibility_occlusion.jsonl` and made visibility/occlusion tagging a mandatory data-prep step for C3/C4/C5.
+- 2026-05-06: Locked exact startup order (6 terminals), clarified sink ownership of async post-processing, and added explicit runtime verification commands for per-frame fields.
