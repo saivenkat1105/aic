@@ -100,7 +100,7 @@ pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/training
   -p defer_gt_to_postprocess:=true \
   -p drop_convert_when_busy:=true \
   -p wait_for_postprocess_on_stop:=false \
-  -p keep_every_nth_bin:=0 \
+  -p keep_every_nth_bin:=10 \
   -p images_output_subdir:=images_debug
 ```
 
@@ -117,9 +117,9 @@ export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
 /home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args \
-  -p num_episodes:=5000 \
-  -p seed:=429508 \
-  -p output_root:=/home/user/training_data/visual_motor_policy/updated_training_data \
+  -p num_episodes:=100 \
+  -p seed:=467 \
+  -p output_root:=/home/user/training_data/visual_motor_policy/testing_data \
   -p use_frame_sink:=true \
   -p frame_sink_service_ns:=/training_frame_sink \
   -p frame_sink_require_webp_done:=true \

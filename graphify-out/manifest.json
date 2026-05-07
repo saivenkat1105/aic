@@ -1,718 +1,726 @@
 {
-  "/home/user/aic/scratch_tf_dumper.py": {
-    "mtime": 1777752938.1553977,
+  "/home/user/.codex/worktrees/3f01/aic/scratch_tf_dumper.py": {
+    "mtime": 1778096756.4958944,
     "hash": "945eac4e39b913762b342bbd8518a80f"
   },
-  "/home/user/aic/aic_scoring/src/ScoringTier1_main.cc": {
-    "mtime": 1777752938.1303954,
+  "/home/user/.codex/worktrees/3f01/aic/aic_scoring/src/ScoringTier1_main.cc": {
+    "mtime": 1778096756.4038827,
     "hash": "05e2b8ab10f23bdb11a8b276d178f900"
   },
-  "/home/user/aic/aic_scoring/src/ScoringTier1.cc": {
-    "mtime": 1777752938.1303954,
+  "/home/user/.codex/worktrees/3f01/aic/aic_scoring/src/ScoringTier1.cc": {
+    "mtime": 1778096756.4038827,
     "hash": "73837316bccab3dca5e8f8ee7c7042fe"
   },
-  "/home/user/aic/aic_scoring/src/ScoringTier2.cc": {
-    "mtime": 1777752938.1303954,
+  "/home/user/.codex/worktrees/3f01/aic/aic_scoring/src/ScoringTier2.cc": {
+    "mtime": 1778096756.4038827,
     "hash": "0621a7179f02bbb624ca0e6e6af462f8"
   },
-  "/home/user/aic/aic_scoring/src/ScoringTier2_main.cc": {
-    "mtime": 1777752938.1313956,
+  "/home/user/.codex/worktrees/3f01/aic/aic_scoring/src/ScoringTier2_main.cc": {
+    "mtime": 1778096756.4038827,
     "hash": "fd056cad026d19b071e9c5cf686f7acf"
   },
-  "/home/user/aic/aic_gazebo/src/ScoringPlugin.cc": {
-    "mtime": 1777752938.125395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_gazebo/src/ScoringPlugin.cc": {
+    "mtime": 1778096756.397882,
     "hash": "22dcca89370ecbe02508e2c2d90a29da"
   },
-  "/home/user/aic/aic_gazebo/src/OffLimitContactsPlugin.cc": {
-    "mtime": 1777752938.125395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_gazebo/src/OffLimitContactsPlugin.cc": {
+    "mtime": 1778096756.3968818,
     "hash": "ba6a8014816358db85d132b3bb81ca16"
   },
-  "/home/user/aic/aic_gazebo/src/WorldSdfGeneratorPlugin.cc": {
-    "mtime": 1777752938.125395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_gazebo/src/WorldSdfGeneratorPlugin.cc": {
+    "mtime": 1778096756.397882,
     "hash": "28ecb96a9411aa6b131f35aeb6199fbd"
   },
-  "/home/user/aic/aic_gazebo/src/CablePlugin.cc": {
-    "mtime": 1777752938.125395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_gazebo/src/CablePlugin.cc": {
+    "mtime": 1778096756.3968818,
     "hash": "7dffb5a77dc6a546be96dd921d328732"
   },
-  "/home/user/aic/aic_gazebo/src/ResetJointsPlugin.cc": {
-    "mtime": 1777752938.125395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_gazebo/src/ResetJointsPlugin.cc": {
+    "mtime": 1778096756.397882,
     "hash": "87fa89a0db8a16dc8d18f082c9a82223"
   },
-  "/home/user/aic/install/_local_setup_util_ps1.py": {
-    "mtime": 1778033650.5560453,
+  "/home/user/.codex/worktrees/3f01/aic/install/_local_setup_util_ps1.py": {
+    "mtime": 1778096756.4868932,
     "hash": "ea9d28e3ab927de4a12fc62d48c7cc10"
   },
-  "/home/user/aic/aic_example_policies/setup.py": {
-    "mtime": 1777752938.124395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/setup.py": {
+    "mtime": 1778096756.395882,
     "hash": "c6f476aa3d765f68cb615fac8d8965b0"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/__init__.py": {
-    "mtime": 1777752938.1223948,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/__init__.py": {
+    "mtime": 1778096756.3948817,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/CheatCodeFixed.py": {
-    "mtime": 1777752938.1223948,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/CheatCodeFixed.py": {
+    "mtime": 1778096756.3948817,
     "hash": "338d08213ecc634110897d290abdda51"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/WaveArm.py": {
-    "mtime": 1777752938.1233947,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/WaveArm.py": {
+    "mtime": 1778096756.395882,
     "hash": "1adac200bf64f1b55cce5d25f15994c7"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/__init__.py": {
-    "mtime": 1777752938.1233947,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/__init__.py": {
+    "mtime": 1778096756.395882,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/SpeedDemon.py": {
-    "mtime": 1777752938.1233947,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/SpeedDemon.py": {
+    "mtime": 1778096756.3948817,
     "hash": "b91d4225ca84ea43f7279e34900f000e"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/WallPresser.py": {
-    "mtime": 1777752938.1233947,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/WallPresser.py": {
+    "mtime": 1778096756.395882,
     "hash": "3827876ce479c0b688dacbedb1c20c8b"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/CheatCode.py": {
-    "mtime": 1777752938.1223948,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/CheatCode.py": {
+    "mtime": 1778096756.3948817,
     "hash": "dff364ab07211650df21a9935e2e3d99"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/RunACT.py": {
-    "mtime": 1777752938.1233947,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/RunACT.py": {
+    "mtime": 1778096756.3948817,
     "hash": "5526a8d22a35a15f7ee0986eda4b63e7"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/GentleGiant.py": {
-    "mtime": 1777752938.1233947,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/GentleGiant.py": {
+    "mtime": 1778096756.3948817,
     "hash": "22510dd7350601b11dffd19ddfe79d6d"
   },
-  "/home/user/aic/aic_example_policies/aic_example_policies/ros/WallToucher.py": {
-    "mtime": 1777752938.1233947,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/aic_example_policies/ros/WallToucher.py": {
+    "mtime": 1778096756.395882,
     "hash": "318fd1f2ecc202b2f2c55702e3631b5b"
   },
-  "/home/user/aic/aic_bringup/scripts/home_robot.py": {
-    "mtime": 1777752938.1173942,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/scripts/home_robot.py": {
+    "mtime": 1778096756.3858805,
     "hash": "aa97233116e379ff09d317b7981a3d85"
   },
-  "/home/user/aic/aic_bringup/scripts/test_impedance.py": {
-    "mtime": 1777752938.1173942,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/scripts/test_impedance.py": {
+    "mtime": 1778096756.3858805,
     "hash": "809156dd5acf2b3255a1106aee8c9bc0"
   },
-  "/home/user/aic/aic_bringup/launch/aic_gz_bringup.launch.py": {
-    "mtime": 1777752938.116394,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/launch/aic_gz_bringup.launch.py": {
+    "mtime": 1778096756.3838804,
     "hash": "110bdcd44071dc4d52190d0f61f35207"
   },
-  "/home/user/aic/aic_bringup/launch/spawn_task_board.launch.py": {
-    "mtime": 1777752938.116394,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/launch/spawn_task_board.launch.py": {
+    "mtime": 1778096756.3848803,
     "hash": "d6fd4e50b8c69e5476fed06e95620c23"
   },
-  "/home/user/aic/aic_bringup/launch/spawn_cable.launch.py": {
-    "mtime": 1777752938.116394,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/launch/spawn_cable.launch.py": {
+    "mtime": 1778096756.3838804,
     "hash": "907516fa788431220f24018b49d62709"
   },
-  "/home/user/aic/aic_model/setup.py": {
-    "mtime": 1777752938.1293952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/setup.py": {
+    "mtime": 1778096756.4018826,
     "hash": "94870f4f0fad31c5a1657bbd19afda6d"
   },
-  "/home/user/aic/aic_model/test/cycle_through_lifecycle.py": {
-    "mtime": 1777752938.1293952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/test/cycle_through_lifecycle.py": {
+    "mtime": 1778096756.4018826,
     "hash": "1438cdf93f056b2d413188e9b5b1c69c"
   },
-  "/home/user/aic/aic_model/test/cancel_task.py": {
-    "mtime": 1777752938.1293952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/test/cancel_task.py": {
+    "mtime": 1778096756.4018826,
     "hash": "2d2e5cad5116db5a08bf4d047c84d014"
   },
-  "/home/user/aic/aic_model/test/create_and_cancel_task.py": {
-    "mtime": 1777752938.1293952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/test/create_and_cancel_task.py": {
+    "mtime": 1778096756.4018826,
     "hash": "3059ea42561ee3fb9328c25aeaca33c0"
   },
-  "/home/user/aic/aic_model/aic_model/policy.py": {
-    "mtime": 1777752938.1283953,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/aic_model/policy.py": {
+    "mtime": 1778096756.4008825,
     "hash": "45c7b7a27b93bde9d1ab193036c540e2"
   },
-  "/home/user/aic/aic_model/aic_model/__init__.py": {
-    "mtime": 1777752938.1283953,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/aic_model/__init__.py": {
+    "mtime": 1778096756.3998823,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "/home/user/aic/aic_model/aic_model/aic_model.py": {
-    "mtime": 1777752938.1283953,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/aic_model/aic_model.py": {
+    "mtime": 1778096756.4008825,
     "hash": "c85c8e768ef8ab0f9268dfbb2d3abaab"
   },
-  "/home/user/aic/aic_model/aic_model/policies/RunACTOffline.py": {
-    "mtime": 1777752938.1283953,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/aic_model/policies/RunACTOffline.py": {
+    "mtime": 1778096756.4008825,
     "hash": "8a49dc78bd0421660f16b491c6d30dc4"
   },
-  "/home/user/aic/aic_model/aic_model/policies/__init__.py": {
-    "mtime": 1777752938.1283953,
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/aic_model/policies/__init__.py": {
+    "mtime": 1778096756.4008825,
     "hash": "9e1a3ea492fa0d2899c53556768a9d1a"
   },
-  "/home/user/aic/aic_model/aic_model/policies/ProximityTeacher.py": {
-    "mtime": 1778033650.5530448,
-    "hash": "371ebaa5d8fecf6eb099c45ce2461808"
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/aic_model/policies/ProximityTeacher.py": {
+    "mtime": 1778096756.4008825,
+    "hash": "f1bea69889ce6791791116df506166e1"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/cartesian_state.hpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/cartesian_state.hpp": {
+    "mtime": 1778096756.3878808,
     "hash": "8a3692188828fa4dc4702394dfc795a2"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/cartesian_limits.hpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/cartesian_limits.hpp": {
+    "mtime": 1778096756.3878808,
     "hash": "470658a3b5faf9252407e556b413f4e2"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/joint_state.hpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/joint_state.hpp": {
+    "mtime": 1778096756.3878808,
     "hash": "417e8421e6478640d1ae08156c7b7a01"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/utils.hpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/utils.hpp": {
+    "mtime": 1778096756.388881,
     "hash": "c3f7461e8cf5faa5236d1b7400aa2ad8"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/aic_controller.hpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/aic_controller.hpp": {
+    "mtime": 1778096756.3878808,
     "hash": "6a02f03c9507538dc17fc3aa9697887d"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/actions/cartesian_impedance_action.hpp": {
-    "mtime": 1777752938.1173942,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/actions/cartesian_impedance_action.hpp": {
+    "mtime": 1778096756.3868806,
     "hash": "5a849bf7b8eea432c78f8541699ce8a9"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/actions/joint_impedance_action.hpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/actions/joint_impedance_action.hpp": {
+    "mtime": 1778096756.3878808,
     "hash": "d8f114b54f99af030b31efb8fed4e2c9"
   },
-  "/home/user/aic/aic_controller/include/aic_controller/actions/gravity_compensation_action.hpp": {
-    "mtime": 1777752938.1173942,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/include/aic_controller/actions/gravity_compensation_action.hpp": {
+    "mtime": 1778096756.3868806,
     "hash": "0e97e6a4cd7ddfbc600c2152f7c6be10"
   },
-  "/home/user/aic/aic_controller/src/cartesian_state.cpp": {
-    "mtime": 1777752938.1193945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/cartesian_state.cpp": {
+    "mtime": 1778096756.390881,
     "hash": "8041215c2ee292fc142440c65958cd19"
   },
-  "/home/user/aic/aic_controller/src/utils.cpp": {
-    "mtime": 1777752938.1193945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/utils.cpp": {
+    "mtime": 1778096756.390881,
     "hash": "8640f04c7519f0b25469fe20a1f9c7ef"
   },
-  "/home/user/aic/aic_controller/src/cartesian_limits.cpp": {
-    "mtime": 1777752938.1193945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/cartesian_limits.cpp": {
+    "mtime": 1778096756.390881,
     "hash": "ea43a83ad0eb05cb36aa0f08f865cd72"
   },
-  "/home/user/aic/aic_controller/src/joint_state.cpp": {
-    "mtime": 1777752938.1193945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/joint_state.cpp": {
+    "mtime": 1778096756.390881,
     "hash": "89e531a6a6b3026afc6efe89bad264d0"
   },
-  "/home/user/aic/aic_controller/src/aic_controller.cpp": {
-    "mtime": 1777752938.1193945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/aic_controller.cpp": {
+    "mtime": 1778096756.3898811,
     "hash": "97af22f93d2baf5a142ae60a86c71d24"
   },
-  "/home/user/aic/aic_controller/src/actions/joint_impedance_action.cpp": {
-    "mtime": 1777752938.1193945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/actions/joint_impedance_action.cpp": {
+    "mtime": 1778096756.3898811,
     "hash": "19dcd18e0f9baf85e7dbae3276530966"
   },
-  "/home/user/aic/aic_controller/src/actions/gravity_compensation_action.cpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/actions/gravity_compensation_action.cpp": {
+    "mtime": 1778096756.388881,
     "hash": "0d2ce5baa500bbd119d5144d8fea7959"
   },
-  "/home/user/aic/aic_controller/src/actions/cartesian_impedance_action.cpp": {
-    "mtime": 1777752938.1183944,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/actions/cartesian_impedance_action.cpp": {
+    "mtime": 1778096756.388881,
     "hash": "47e1f0cdf33b8a2a5a8b7912f5ee479c"
   },
-  "/home/user/aic/aic_engine/src/main.cpp": {
-    "mtime": 1777752938.1223948,
+  "/home/user/.codex/worktrees/3f01/aic/aic_engine/src/main.cpp": {
+    "mtime": 1778096756.3938816,
     "hash": "dd842dc2dd5aa21bf41e533d974db285"
   },
-  "/home/user/aic/aic_engine/src/aic_engine.hpp": {
-    "mtime": 1777752938.1223948,
+  "/home/user/.codex/worktrees/3f01/aic/aic_engine/src/aic_engine.hpp": {
+    "mtime": 1778096756.3938816,
     "hash": "0dbc943b75388c5aaf1d1de84fe0b596"
   },
-  "/home/user/aic/aic_engine/src/aic_engine.cpp": {
-    "mtime": 1777752938.1213946,
+  "/home/user/.codex/worktrees/3f01/aic/aic_engine/src/aic_engine.cpp": {
+    "mtime": 1778096756.3938816,
     "hash": "06ec0a735eb24b93db851940a20ed04b"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py": {
-    "mtime": 1778052161.173854,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py": {
+    "mtime": 1778096756.4168844,
     "hash": "156e0dfd5874166766d38f0930d53a37"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_and_prune.py": {
-    "mtime": 1778033650.554045,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/scripts/port_detector_c3.py": {
+    "mtime": 1778137672.8734026,
+    "hash": "96bc02968267673e842a44a515d50194"
+  },
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_and_prune.py": {
+    "mtime": 1778096756.4158843,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/scripts/training_frame_sink.py": {
-    "mtime": 1778053421.4427366,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/scripts/training_frame_sink.py": {
+    "mtime": 1778096756.4168844,
     "hash": "354644598e82c0df527ac232c0408b31"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py": {
-    "mtime": 1778033650.5550451,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py": {
+    "mtime": 1778096756.4158843,
     "hash": "05ac801a8e17e099509ea08cc764f61f"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_prune.py": {
-    "mtime": 1778033650.5550451,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_prune.py": {
+    "mtime": 1778096756.4158843,
     "hash": "09af9020ee366cd5cd164501d6d9f95e"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/scripts/xacro_expander.py": {
-    "mtime": 1777752938.1403964,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/scripts/xacro_expander.py": {
+    "mtime": 1778096756.4168844,
     "hash": "15785f1a28bee325db3e867cb47177d7"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/launch/aic_training_gz_bringup.launch.py": {
-    "mtime": 1777752938.1403964,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/launch/aic_training_gz_bringup.launch.py": {
+    "mtime": 1778096756.414884,
     "hash": "1c74050eba0dc25530e018baa605b705"
   },
-  "/home/user/aic/aic_utils/aic_foxglove/setup.py": {
-    "mtime": 1777752938.1313956,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_foxglove/setup.py": {
+    "mtime": 1778096756.404883,
     "hash": "dbcaa6104435a2266afad3aa3fdfdf8b"
   },
-  "/home/user/aic/aic_utils/aic_foxglove/aic_foxglove/__init__.py": {
-    "mtime": 1777752938.1313956,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_foxglove/aic_foxglove/__init__.py": {
+    "mtime": 1778096756.4038827,
     "hash": "d6270a69cdb102f87d2e3dbff252f3d1"
   },
-  "/home/user/aic/aic_utils/aic_foxglove/aic_foxglove/publish_low_bandwidth_previews.py": {
-    "mtime": 1777752938.1313956,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_foxglove/aic_foxglove/publish_low_bandwidth_previews.py": {
+    "mtime": 1778096756.4038827,
     "hash": "4f55c0a9f7ae233cb70ba003224e8337"
   },
-  "/home/user/aic/aic_utils/aic_foxglove/aic_foxglove/publish_scene_markers.py": {
-    "mtime": 1777752938.1313956,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_foxglove/aic_foxglove/publish_scene_markers.py": {
+    "mtime": 1778096756.404883,
     "hash": "5d1d34b015f3a12b010303e3dd3d81ee"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/main.py": {
-    "mtime": 1777752938.1413965,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/main.py": {
+    "mtime": 1778096756.4178846,
     "hash": "41919ac07225fdb94230fd52a34f1071"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/setup.py": {
-    "mtime": 1777752938.1413965,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/setup.py": {
+    "mtime": 1778096756.4188848,
     "hash": "d3f4d30aeb427f725f9b42399af2a773"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/types.py": {
-    "mtime": 1777752938.1413965,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/types.py": {
+    "mtime": 1778096756.4178846,
     "hash": "da264cfc31ce40ece7c1b8b36815443e"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/__init__.py": {
-    "mtime": 1777752938.1413965,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/__init__.py": {
+    "mtime": 1778096756.4178846,
     "hash": "bc7dc4fa3e3c7aec5dac4fde099aea00"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_teleop.py": {
-    "mtime": 1777752938.1413965,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_teleop.py": {
+    "mtime": 1778096756.4178846,
     "hash": "2823774fc1e6ac4dac4fdd9158e85a33"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_robot.py": {
-    "mtime": 1777752938.1413965,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_robot.py": {
+    "mtime": 1778096756.4178846,
     "hash": "86f4e62e5349779f5590df090b0d6380"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_robot_aic_controller.py": {
-    "mtime": 1777752938.1413965,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_robot_aic_controller.py": {
+    "mtime": 1778096756.4178846,
     "hash": "20c6ac458fd5b71414967e7cba015270"
   },
-  "/home/user/aic/aic_utils/aic_mujoco/scripts/add_cable_plugin.py": {
-    "mtime": 1777752938.1383963,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_mujoco/scripts/add_cable_plugin.py": {
+    "mtime": 1778096756.4118838,
     "hash": "ae9e31870bb881a054124c6c843834fa"
   },
-  "/home/user/aic/aic_utils/aic_mujoco/scripts/sim_comparison_test.py": {
-    "mtime": 1777752938.1383963,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_mujoco/scripts/sim_comparison_test.py": {
+    "mtime": 1778096756.412884,
     "hash": "7feb86b57977bc126ec366220cce80c9"
   },
-  "/home/user/aic/aic_utils/aic_mujoco/scripts/view_scene.py": {
-    "mtime": 1777752938.1383963,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_mujoco/scripts/view_scene.py": {
+    "mtime": 1778096756.412884,
     "hash": "555961874ddab5affc303825aeef9909"
   },
-  "/home/user/aic/aic_utils/aic_mujoco/scripts/load_aic_world.py": {
-    "mtime": 1777752938.1383963,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_mujoco/scripts/load_aic_world.py": {
+    "mtime": 1778096756.412884,
     "hash": "f80aaaa07c8ad58c0e70fa26e9a48cf5"
   },
-  "/home/user/aic/aic_utils/aic_mujoco/launch/aic_mujoco_bringup.launch.py": {
-    "mtime": 1777752938.136396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_mujoco/launch/aic_mujoco_bringup.launch.py": {
+    "mtime": 1778096756.4108837,
     "hash": "a7ae6cc562d8122d9b3e1c8f3f4955fc"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/zero_agent.py": {
-    "mtime": 1777752938.1343958,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/zero_agent.py": {
+    "mtime": 1778096756.4078834,
     "hash": "b5c09726d0b5fb5c7c291c0e869c37f1"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/record_demos.py": {
-    "mtime": 1777752938.1333957,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/record_demos.py": {
+    "mtime": 1778096756.4068832,
     "hash": "d22db46e4bec20fca3b6fea9100f4a5a"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/list_envs.py": {
-    "mtime": 1777752938.1333957,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/list_envs.py": {
+    "mtime": 1778096756.4068832,
     "hash": "2c0e503c961640feaf1a8edc30c1c825"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/random_agent.py": {
-    "mtime": 1777752938.1333957,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/random_agent.py": {
+    "mtime": 1778096756.4068832,
     "hash": "d912add4b86e2ce39602f40919831314"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/replay_demos.py": {
-    "mtime": 1777752938.1333957,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/replay_demos.py": {
+    "mtime": 1778096756.4068832,
     "hash": "f0bc012bd6827a7e244d07583cd190c6"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/teleop.py": {
-    "mtime": 1777752938.1343958,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/teleop.py": {
+    "mtime": 1778096756.4078834,
     "hash": "aa0836cf6bb75e06ab64003aab98795f"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/rsl_rl/play.py": {
-    "mtime": 1777752938.1333957,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/rsl_rl/play.py": {
+    "mtime": 1778096756.4068832,
     "hash": "174648da54cb37e20fc3dd39b37f8a2b"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/rsl_rl/train.py": {
-    "mtime": 1777752938.1333957,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/rsl_rl/train.py": {
+    "mtime": 1778096756.4078834,
     "hash": "050e37974a64c7c01e9d4a98851cfb9d"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/rsl_rl/cli_args.py": {
-    "mtime": 1777752938.1333957,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/scripts/rsl_rl/cli_args.py": {
+    "mtime": 1778096756.4068832,
     "hash": "6d8feb2f3b11ac87184e99ff483dbe8b"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/setup.py": {
-    "mtime": 1777752938.136396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/setup.py": {
+    "mtime": 1778096756.4098835,
     "hash": "b6bc43ecea0e05f29485aa69d02edaf6"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/extension.py": {
-    "mtime": 1777752938.1343958,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/extension.py": {
+    "mtime": 1778096756.4078834,
     "hash": "619cacc445010aba90ff0697c65a4683"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/__init__.py": {
-    "mtime": 1777752938.1343958,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/__init__.py": {
+    "mtime": 1778096756.4078834,
     "hash": "85e0bbcf76de79a8bf24c9cb0801a129"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/__init__.py": {
-    "mtime": 1777752938.1343958,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/__init__.py": {
+    "mtime": 1778096756.4078834,
     "hash": "308b312b78a86d1790142f354f2525cc"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/__init__.py": {
-    "mtime": 1777752938.1343958,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/__init__.py": {
+    "mtime": 1778096756.4088833,
     "hash": "640699eb0639bf005e450e1ac4b7f3dc"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/__init__.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/__init__.py": {
+    "mtime": 1778096756.4088833,
     "hash": "93ec4702ff7d8e4e7cfc6f96ed817619"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/aic_task_env_cfg.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/aic_task_env_cfg.py": {
+    "mtime": 1778096756.4088833,
     "hash": "797a916f0609d8d21b87b0b7732f9065"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/agents/__init__.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/agents/__init__.py": {
+    "mtime": 1778096756.4088833,
     "hash": "118bb428924071bbd5639a240854fc55"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/agents/rsl_rl_ppo_cfg.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/agents/rsl_rl_ppo_cfg.py": {
+    "mtime": 1778096756.4088833,
     "hash": "f7d56afd43c7c7b54fc619f64a0f7206"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/__init__.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/__init__.py": {
+    "mtime": 1778096756.4088833,
     "hash": "5487b2262deba9ca6713186d2d44fd1c"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/observations.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/observations.py": {
+    "mtime": 1778096756.4088833,
     "hash": "4e67491eeb34bec08474c91e66dfcf24"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/events.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/events.py": {
+    "mtime": 1778096756.4088833,
     "hash": "d932223b28332b52f4bf6df8c2d4a585"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/rewards.py": {
-    "mtime": 1777752938.135396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/aic_task/tasks/manager_based/aic_task/mdp/rewards.py": {
+    "mtime": 1778096756.4098835,
     "hash": "75a8cdbbdc6e219b56a83e38aea903a7"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/setup.py": {
-    "mtime": 1777752938.1393962,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/setup.py": {
+    "mtime": 1778096756.4138842,
     "hash": "302e0d8095a0132f10167928a9c443d3"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop_ssh.py": {
-    "mtime": 1777752938.1393962,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop_ssh.py": {
+    "mtime": 1778096756.4138842,
     "hash": "1f0c3e0245dee1d7bb1e6531c262c95f"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop_ssh.py": {
-    "mtime": 1777752938.1393962,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop_ssh.py": {
+    "mtime": 1778096756.412884,
     "hash": "95ae2a6f036317c599aeca57b0ce90fd"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop.py": {
-    "mtime": 1777752938.1393962,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop.py": {
+    "mtime": 1778096756.412884,
     "hash": "913abc89a0294d4c8bf70f2da641a60d"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop.py": {
-    "mtime": 1777752938.1393962,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop.py": {
+    "mtime": 1778096756.412884,
     "hash": "2129c1248ba7fcdb26393b0fd175e01e"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/aic_teleoperation/__init__.py": {
-    "mtime": 1777752938.1383963,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/aic_teleoperation/__init__.py": {
+    "mtime": 1778096756.412884,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "/home/user/aic/aic_adapter/include/aic_adapter/aic_adapter.hpp": {
-    "mtime": 1777752937.3253212,
+  "/home/user/.codex/worktrees/3f01/aic/aic_adapter/include/aic_adapter/aic_adapter.hpp": {
+    "mtime": 1778096755.5807786,
     "hash": "ec2cd1e22d99a285eb8360abbc22bb7b"
   },
-  "/home/user/aic/aic_adapter/src/aic_adapter.cpp": {
-    "mtime": 1777752937.3263214,
+  "/home/user/.codex/worktrees/3f01/aic/aic_adapter/src/aic_adapter.cpp": {
+    "mtime": 1778096755.5807786,
     "hash": "26c00c69ce2df54c03513d04fb3a34ef"
   },
-  "/home/user/aic/AGENTS.md": {
-    "mtime": 1778051173.9456413,
+  "/home/user/.codex/worktrees/3f01/aic/AGENTS.md": {
+    "mtime": 1778096755.5797784,
     "hash": "8ee39dcfe68a23b3797b02648930d699"
   },
-  "/home/user/aic/README.md": {
-    "mtime": 1777752937.3243213,
+  "/home/user/.codex/worktrees/3f01/aic/README.md": {
+    "mtime": 1778096755.5797784,
     "hash": "370093aa9efa0c10d6b396161435373b"
   },
-  "/home/user/aic/camera_calibration/tf_static.yaml": {
-    "mtime": 1778035580.8044019,
+  "/home/user/.codex/worktrees/3f01/aic/camera_calibration/tf_static.yaml": {
+    "mtime": 1778096756.4238853,
     "hash": "6eacd6599a994dad5d356b3c299fb4e6"
   },
-  "/home/user/aic/camera_calibration/right_camera_info.yaml": {
-    "mtime": 1778035578.2640789,
+  "/home/user/.codex/worktrees/3f01/aic/camera_calibration/right_camera_info.yaml": {
+    "mtime": 1778096756.4238853,
     "hash": "f925a16f81f940cd93adffdc5dcb907c"
   },
-  "/home/user/aic/camera_calibration/center_camera_info.yaml": {
-    "mtime": 1778035575.7147546,
+  "/home/user/.codex/worktrees/3f01/aic/camera_calibration/center_camera_info.yaml": {
+    "mtime": 1778096756.4228852,
     "hash": "89eb5abb4be01ee8eac68789a143e1ea"
   },
-  "/home/user/aic/camera_calibration/left_camera_info.yaml": {
-    "mtime": 1778035573.1094234,
+  "/home/user/.codex/worktrees/3f01/aic/camera_calibration/left_camera_info.yaml": {
+    "mtime": 1778096756.4238853,
     "hash": "e78e5ad93a21dfbd5eaaa71034f0f507"
   },
-  "/home/user/aic/aic_scoring/CMakeLists.txt": {
-    "mtime": 1777752938.1293952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_scoring/CMakeLists.txt": {
+    "mtime": 1778096756.4018826,
     "hash": "f9c0001ed22abe2b0e97a656271fb93b"
   },
-  "/home/user/aic/aic_scoring/config/tier2.yaml": {
-    "mtime": 1777752938.1293952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_scoring/config/tier2.yaml": {
+    "mtime": 1778096756.4018826,
     "hash": "40818e1dea38b467a9d1c2b3482be604"
   },
-  "/home/user/aic/aic_scoring/config/tier1.yaml": {
-    "mtime": 1777752938.1293952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_scoring/config/tier1.yaml": {
+    "mtime": 1778096756.4018826,
     "hash": "8f8d2ff179d77786456f7c2fdef2ca56"
   },
-  "/home/user/aic/aic_gazebo/CMakeLists.txt": {
-    "mtime": 1777752938.124395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_gazebo/CMakeLists.txt": {
+    "mtime": 1778096756.395882,
     "hash": "e937b2d42199b91a8a1531cdb98106a6"
   },
-  "/home/user/aic/aic_description/CMakeLists.txt": {
-    "mtime": 1777752938.1203945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_description/CMakeLists.txt": {
+    "mtime": 1778096756.3918812,
     "hash": "2ff21ce68d3d800eb3378942c2ef1c63"
   },
-  "/home/user/aic/aic_example_policies/README.md": {
-    "mtime": 1777752938.1223948,
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/README.md": {
+    "mtime": 1778096756.3948817,
     "hash": "102185c3abba9f52f87dcfdce1038575"
   },
-  "/home/user/aic/aic_example_policies/files.txt": {
-    "mtime": 1777864094.955874,
-    "hash": "8b097d15c617eafd8170fc9217621881"
+  "/home/user/.codex/worktrees/3f01/aic/aic_example_policies/files.txt": {
+    "mtime": 1778097561.0123866,
+    "hash": "973df785c564ec3d488b7f5a363ddacb"
   },
-  "/home/user/aic/aic_bringup/CMakeLists.txt": {
-    "mtime": 1777752938.115394,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/CMakeLists.txt": {
+    "mtime": 1778096756.38188,
     "hash": "5835a945434a5483a66b9b0e5c863b0a"
   },
-  "/home/user/aic/aic_bringup/README.md": {
-    "mtime": 1777752938.115394,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/README.md": {
+    "mtime": 1778096756.3828802,
     "hash": "9254ba820f2274643a12ba98d07a4db2"
   },
-  "/home/user/aic/aic_bringup/config/ros_gz_bridge_config.yaml": {
-    "mtime": 1777752938.115394,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/config/ros_gz_bridge_config.yaml": {
+    "mtime": 1778096756.3828802,
     "hash": "09e68335917cb7b9eb63e823be5b6816"
   },
-  "/home/user/aic/aic_bringup/config/aic_ros2_controllers.yaml": {
-    "mtime": 1777752938.115394,
+  "/home/user/.codex/worktrees/3f01/aic/aic_bringup/config/aic_ros2_controllers.yaml": {
+    "mtime": 1778096756.3828802,
     "hash": "c37b02a5af25137fd114df542a854e91"
   },
-  "/home/user/aic/aic_model/files.txt": {
-    "mtime": 1777864086.7528148,
-    "hash": "cb412be079bcef82488b5667e6f64671"
+  "/home/user/.codex/worktrees/3f01/aic/aic_model/files.txt": {
+    "mtime": 1778097543.9271634,
+    "hash": "77bf6dec8086be41d6b4b71b04a1f0b7"
   },
-  "/home/user/aic/aic_controller/CMakeLists.txt": {
-    "mtime": 1777752938.1173942,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/CMakeLists.txt": {
+    "mtime": 1778096756.3858805,
     "hash": "eebbd42336cb01d297485b4810f0e22c"
   },
-  "/home/user/aic/aic_controller/src/aic_controller_parameters.yaml": {
-    "mtime": 1777752938.1193945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_controller/src/aic_controller_parameters.yaml": {
+    "mtime": 1778096756.390881,
     "hash": "205a50318ed817ec449691d1dd6584f5"
   },
-  "/home/user/aic/aic_engine/CMakeLists.txt": {
-    "mtime": 1777752938.1203945,
+  "/home/user/.codex/worktrees/3f01/aic/aic_engine/CMakeLists.txt": {
+    "mtime": 1778096756.3928814,
     "hash": "249b903edc1183d16b6f1ecc4bcb09f9"
   },
-  "/home/user/aic/aic_engine/README.md": {
-    "mtime": 1777752938.1213946,
+  "/home/user/.codex/worktrees/3f01/aic/aic_engine/README.md": {
+    "mtime": 1778096756.3928814,
     "hash": "5f21a530ba5b2fab639620c5001bb5f6"
   },
-  "/home/user/aic/aic_engine/config/sample_config.yaml": {
-    "mtime": 1777752938.1213946,
+  "/home/user/.codex/worktrees/3f01/aic/aic_engine/config/sample_config.yaml": {
+    "mtime": 1778096756.3928814,
     "hash": "2789aab399246961d2e81e1d6727e7ef"
   },
-  "/home/user/aic/aic_interfaces/aic_engine_interfaces/CMakeLists.txt": {
-    "mtime": 1777752938.126395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_interfaces/aic_engine_interfaces/CMakeLists.txt": {
+    "mtime": 1778096756.3988822,
     "hash": "6fd615f5faba6157fc85bb75c2facbd9"
   },
-  "/home/user/aic/aic_interfaces/aic_control_interfaces/CMakeLists.txt": {
-    "mtime": 1777752938.126395,
+  "/home/user/.codex/worktrees/3f01/aic/aic_interfaces/aic_control_interfaces/CMakeLists.txt": {
+    "mtime": 1778096756.397882,
     "hash": "6aea0602a0ac7405a9a9f2730bdb5fa1"
   },
-  "/home/user/aic/aic_interfaces/aic_model_interfaces/CMakeLists.txt": {
-    "mtime": 1777752938.1273952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_interfaces/aic_model_interfaces/CMakeLists.txt": {
+    "mtime": 1778096756.3998823,
     "hash": "1005cdf9a12ecd9b6841ec60beaf449a"
   },
-  "/home/user/aic/aic_interfaces/aic_task_interfaces/CMakeLists.txt": {
-    "mtime": 1777752938.1273952,
+  "/home/user/.codex/worktrees/3f01/aic/aic_interfaces/aic_task_interfaces/CMakeLists.txt": {
+    "mtime": 1778096756.3998823,
     "hash": "284ada935cecfcfffbfb084a155ab3fd"
   },
-  "/home/user/aic/aic_utils/aic_training_utils/CMakeLists.txt": {
-    "mtime": 1778033650.554045,
-    "hash": "d08c0d51ba42c62920c2a569cc3e46cc"
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_utils/CMakeLists.txt": {
+    "mtime": 1778097799.679311,
+    "hash": "ec6d1592a8fb44b7012fe47d587c37ae"
   },
-  "/home/user/aic/aic_utils/aic_training_interfaces/CMakeLists.txt": {
-    "mtime": 1778033650.5530448,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_training_interfaces/CMakeLists.txt": {
+    "mtime": 1778096756.4138842,
     "hash": "0a63a3f377aa89c7b0d5be7723efc1ed"
   },
-  "/home/user/aic/aic_utils/aic_foxglove/files.txt": {
-    "mtime": 1777863656.5282118,
-    "hash": "35086bd67ce34df8d7e098b08a25e5e5"
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_foxglove/files.txt": {
+    "mtime": 1778097501.1435895,
+    "hash": "d249dca53aede0435f82fed2fc312f8b"
   },
-  "/home/user/aic/aic_utils/lerobot_robot_aic/README.md": {
-    "mtime": 1777752938.1403964,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/lerobot_robot_aic/README.md": {
+    "mtime": 1778096756.4178846,
     "hash": "061c5c24bb48d1238358ecc3637d9ebd"
   },
-  "/home/user/aic/aic_utils/aic_mujoco/CMakeLists.txt": {
-    "mtime": 1777752938.136396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_mujoco/CMakeLists.txt": {
+    "mtime": 1778096756.4098835,
     "hash": "2f7b9048e495c4e3f1003d307b340235"
   },
-  "/home/user/aic/aic_utils/aic_mujoco/README.md": {
-    "mtime": 1777752938.136396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_mujoco/README.md": {
+    "mtime": 1778096756.4098835,
     "hash": "e2eef5ab01ede084a9b75c67b5f03be2"
   },
-  "/home/user/aic/aic_utils/aic_isaac/README.md": {
-    "mtime": 1777752938.1323955,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/README.md": {
+    "mtime": 1778096756.404883,
     "hash": "8451024c3ff8589b13067fad84d68db6"
   },
-  "/home/user/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/docs/CHANGELOG.rst": {
-    "mtime": 1777752938.136396,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_isaac/aic_isaaclab/source/aic_task/docs/CHANGELOG.rst": {
+    "mtime": 1778096756.4098835,
     "hash": "9073d7cf2f7ab2270a08bd2c8f176392"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/README.md": {
-    "mtime": 1777752938.1383963,
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/README.md": {
+    "mtime": 1778096756.412884,
     "hash": "70a45d130e940de21c6b38b4699b3dd8"
   },
-  "/home/user/aic/aic_utils/aic_teleoperation/files.txt": {
-    "mtime": 1777863595.9993765,
-    "hash": "4ff580fb446a93cecb444717e8bae1e0"
+  "/home/user/.codex/worktrees/3f01/aic/aic_utils/aic_teleoperation/files.txt": {
+    "mtime": 1778097374.658048,
+    "hash": "4792317654fbffeea1d17225e12df02b"
   },
-  "/home/user/aic/docker/docker-compose.yaml": {
-    "mtime": 1777752938.147397,
+  "/home/user/.codex/worktrees/3f01/aic/docker/docker-compose.yaml": {
+    "mtime": 1778096756.4248855,
     "hash": "6a5bdb0a7799ec3ab8bf0908ed1e6add"
   },
-  "/home/user/aic/docker/results/scoring.yaml": {
-    "mtime": 1777752938.147397,
+  "/home/user/.codex/worktrees/3f01/aic/docker/results/scoring.yaml": {
+    "mtime": 1778096756.4258857,
     "hash": "4848d7fc00e84e6ee5fc19b829e88085"
   },
-  "/home/user/aic/aic_adapter/CMakeLists.txt": {
-    "mtime": 1777752937.3253212,
+  "/home/user/.codex/worktrees/3f01/aic/aic_adapter/CMakeLists.txt": {
+    "mtime": 1778096755.5807786,
     "hash": "4841d31aa3cff503c1d0710d06ef750f"
   },
-  "/home/user/aic/docs/participant_utilities.md": {
-    "mtime": 1777752938.1493971,
+  "/home/user/.codex/worktrees/3f01/aic/docs/participant_utilities.md": {
+    "mtime": 1778096756.4278858,
     "hash": "0bd07f1a1637a2d7da961bb0ddffe632"
   },
-  "/home/user/aic/docs/access_control.md": {
-    "mtime": 1777752938.147397,
+  "/home/user/.codex/worktrees/3f01/aic/docs/visual_proximity_c3_port_detector.md": {
+    "mtime": 1778130018.700433,
+    "hash": "afef7ab5ee89e7ef1629c6f2e4242c94"
+  },
+  "/home/user/.codex/worktrees/3f01/aic/docs/access_control.md": {
+    "mtime": 1778096756.4258857,
     "hash": "e8b60e13d09d58d2e723ce76432f8a67"
   },
-  "/home/user/aic/docs/submission.md": {
-    "mtime": 1777752938.1503973,
+  "/home/user/.codex/worktrees/3f01/aic/docs/submission.md": {
+    "mtime": 1778096756.428886,
     "hash": "5f4dda3af0798221d0f32d3ae60aaa33"
   },
-  "/home/user/aic/docs/custom_dockerfile.md": {
-    "mtime": 1777752938.1483972,
+  "/home/user/.codex/worktrees/3f01/aic/docs/custom_dockerfile.md": {
+    "mtime": 1778096756.4268856,
     "hash": "ff457504b5a7f721f5a561755454d58d"
   },
-  "/home/user/aic/docs/aic_policy_master_context.md": {
-    "mtime": 1777752938.1483972,
+  "/home/user/.codex/worktrees/3f01/aic/docs/aic_policy_master_context.md": {
+    "mtime": 1778096756.4268856,
     "hash": "fd51ae8feaf715d69415e3f6ba0d1d64"
   },
-  "/home/user/aic/docs/common_cli_args.md": {
-    "mtime": 1777752938.1483972,
+  "/home/user/.codex/worktrees/3f01/aic/docs/common_cli_args.md": {
+    "mtime": 1778096756.4268856,
     "hash": "5984b76ecca76103a63b14f6b668bc73"
   },
-  "/home/user/aic/docs/aic_interfaces.md": {
-    "mtime": 1777752938.1483972,
+  "/home/user/.codex/worktrees/3f01/aic/docs/aic_interfaces.md": {
+    "mtime": 1778096756.4268856,
     "hash": "c2efc5f0fabc85592459814ecc9157b7"
   },
-  "/home/user/aic/docs/troubleshooting.md": {
-    "mtime": 1777752938.1503973,
+  "/home/user/.codex/worktrees/3f01/aic/docs/troubleshooting.md": {
+    "mtime": 1778096756.429886,
     "hash": "c7b473aef92583071bdd031cd751e7a4"
   },
-  "/home/user/aic/docs/getting_started.md": {
-    "mtime": 1777752938.1493971,
+  "/home/user/.codex/worktrees/3f01/aic/docs/getting_started.md": {
+    "mtime": 1778096756.4268856,
     "hash": "e3f95a6da6b787c4846d9a38178af36c"
   },
-  "/home/user/aic/docs/aic_controller.md": {
-    "mtime": 1777752938.1483972,
+  "/home/user/.codex/worktrees/3f01/aic/docs/aic_controller.md": {
+    "mtime": 1778096756.4258857,
     "hash": "1fbf4593ebdfe1e5931aa0dd27c408fe"
   },
-  "/home/user/aic/docs/qualification_phase.md": {
-    "mtime": 1777752938.1503973,
+  "/home/user/.codex/worktrees/3f01/aic/docs/qualification_phase.md": {
+    "mtime": 1778096756.4278858,
     "hash": "0791aa0ff62a1a7c956a98a92617e85a"
   },
-  "/home/user/aic/docs/policy.md": {
-    "mtime": 1777752938.1493971,
+  "/home/user/.codex/worktrees/3f01/aic/docs/policy.md": {
+    "mtime": 1778096756.4278858,
     "hash": "cca2b808f9ea6d6abef8b162feb072a0"
   },
-  "/home/user/aic/docs/SUBMISSION_STEPS.md": {
-    "mtime": 1777752938.147397,
+  "/home/user/.codex/worktrees/3f01/aic/docs/SUBMISSION_STEPS.md": {
+    "mtime": 1778096756.4258857,
     "hash": "5943857d157a8e2f2f642075846699f9"
   },
-  "/home/user/aic/docs/build_eval.md": {
-    "mtime": 1777752938.1483972,
+  "/home/user/.codex/worktrees/3f01/aic/docs/build_eval.md": {
+    "mtime": 1778096756.4268856,
     "hash": "d2009a21c4597830b2eb1e57970f8320"
   },
-  "/home/user/aic/docs/challenge_rules.md": {
-    "mtime": 1777752938.1483972,
+  "/home/user/.codex/worktrees/3f01/aic/docs/challenge_rules.md": {
+    "mtime": 1778096756.4268856,
     "hash": "ff747834d0cd7c389154db8ed973121e"
   },
-  "/home/user/aic/docs/overview.md": {
-    "mtime": 1777752938.1493971,
+  "/home/user/.codex/worktrees/3f01/aic/docs/overview.md": {
+    "mtime": 1778096756.4278858,
     "hash": "fb6a0f4020468fdb17ba10a110beb4e1"
   },
-  "/home/user/aic/docs/task_board_description.md": {
-    "mtime": 1777752938.1503973,
+  "/home/user/.codex/worktrees/3f01/aic/docs/task_board_description.md": {
+    "mtime": 1778096756.429886,
     "hash": "7cbb273e5b15257ea86add4716ba5779"
   },
-  "/home/user/aic/docs/scoring.md": {
-    "mtime": 1777752938.1503973,
+  "/home/user/.codex/worktrees/3f01/aic/docs/scoring.md": {
+    "mtime": 1778096756.428886,
     "hash": "712909b02986109c437f452320cc1aed"
   },
-  "/home/user/aic/docs/scene_description.md": {
-    "mtime": 1777752938.1503973,
+  "/home/user/.codex/worktrees/3f01/aic/docs/scene_description.md": {
+    "mtime": 1778096756.428886,
     "hash": "8584e24aed0e07b0b2752167ffe93ab3"
   },
-  "/home/user/aic/docs/scoring_tests.md": {
-    "mtime": 1777752938.1503973,
+  "/home/user/.codex/worktrees/3f01/aic/docs/scoring_tests.md": {
+    "mtime": 1778096756.428886,
     "hash": "bb2dd97815efbe4bcaf2f853928338af"
   },
-  "/home/user/aic/docs/master_context.md": {
-    "mtime": 1777752938.1493971,
+  "/home/user/.codex/worktrees/3f01/aic/docs/master_context.md": {
+    "mtime": 1778096756.4278858,
     "hash": "a52ee846b62eb6ca0220005e959bd6f0"
   },
-  "/home/user/aic/docs/phases.md": {
-    "mtime": 1777752938.1493971,
+  "/home/user/.codex/worktrees/3f01/aic/docs/phases.md": {
+    "mtime": 1778096756.4278858,
     "hash": "1b5b2a022600a6bf0870894ca304e630"
   },
-  "/home/user/aic/docs/glossary.md": {
-    "mtime": 1777752938.1493971,
+  "/home/user/.codex/worktrees/3f01/aic/docs/glossary.md": {
+    "mtime": 1778096756.4278858,
     "hash": "0d8bb24bba1fefe92a657d07e866860e"
   },
-  "/home/user/aic/planning/training_campaign_runbook.md": {
-    "mtime": 1778033650.562046,
+  "/home/user/.codex/worktrees/3f01/aic/planning/training_campaign_runbook.md": {
+    "mtime": 1778096756.493894,
     "hash": "46eac998fd7e86b42c4d80e213942f5a"
   },
-  "/home/user/aic/planning/training_data_generator_plan.md": {
-    "mtime": 1778051641.1885037,
-    "hash": "0a96053e4edc4814d5375d4692fffd9d"
+  "/home/user/.codex/worktrees/3f01/aic/planning/training_data_generator_plan.md": {
+    "mtime": 1778096760.7314303,
+    "hash": "b3b94886cd7928fff7d5121e52f55be5"
   },
-  "/home/user/aic/planning/overall_aic_competition_plan.md": {
-    "mtime": 1777752938.1553977,
+  "/home/user/.codex/worktrees/3f01/aic/planning/overall_aic_competition_plan.md": {
+    "mtime": 1778096756.492894,
     "hash": "26f8e1fe073e93efcb65232035ce84cf"
   },
-  "/home/user/aic/planning/visual_proximity_components_3_5_plan.md": {
-    "mtime": 1778040396.3667612,
+  "/home/user/.codex/worktrees/3f01/aic/planning/visual_proximity_components_3_5_plan.md": {
+    "mtime": 1778096756.4948943,
     "hash": "515169c161a56006e6fae7e616f1db5d"
   },
-  "/home/user/aic/planning/visual_motor_policy_plan.md": {
-    "mtime": 1777752938.1553977,
+  "/home/user/.codex/worktrees/3f01/aic/planning/visual_motor_policy_plan.md": {
+    "mtime": 1778096756.4948943,
     "hash": "e3e65534ec662b3a39445e7aae1a4944"
   },
-  "/home/user/aic/planning/sfp_visual_proximity_baseline_workflow.md": {
-    "mtime": 1777752938.1553977,
+  "/home/user/.codex/worktrees/3f01/aic/planning/sfp_visual_proximity_baseline_workflow.md": {
+    "mtime": 1778096756.493894,
     "hash": "8aa0846fb502e08744839fb8346d5b55"
   },
-  "/home/user/aic/aic_assets/CMakeLists.txt": {
-    "mtime": 1777752937.3273215,
+  "/home/user/.codex/worktrees/3f01/aic/aic_assets/CMakeLists.txt": {
+    "mtime": 1778096755.5807786,
     "hash": "8b3f6a09c92afce1ce21f23960ee2e65"
   }
 }

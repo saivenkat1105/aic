@@ -17,6 +17,7 @@ install(PROGRAMS
   scripts/proximity_data_generator.py
   scripts/training_frame_sink.py
   scripts/bin_to_webp_converter.py
+  scripts/port_detector_c3.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
