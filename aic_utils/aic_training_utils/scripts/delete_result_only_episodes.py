@@ -76,7 +76,7 @@ def is_empty_dir(path: Path) -> bool:
 
 
 def classify_episode(episode_dir: Path, allow_empty_dirs: bool) -> tuple[bool, str]:
-    results_path = episode_dir / "results.json"
+    results_path = episode_dir / "result.json"
     if not results_path.is_file():
         return False, "missing_results_json"
 
