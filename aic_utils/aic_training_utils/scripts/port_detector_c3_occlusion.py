@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Occlusion-aware C3 detector wrapper.
+"""Occlusion-aware C3 detector wrapper (fast image-only mode).
 
 This script keeps the original C3 training/inference flow but adds an
 on-the-fly label-cleaning stage for manipulator occlusions in existing RGB data.
 
-Implemented options:
-- Option 2: TCP-projected ROI + black-color gate (HSV + RGB)
-- Option 4: Per-camera instance drop only
+Implemented fast method:
+- Bottom-strip black-mass gate (default: bottom 25%)
+- Local keypoint-neighborhood black-ratio check near projected ports
+- Per-camera drop only; no cross-camera coupling
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,7 +23,7 @@ from typing import Any
 import numpy as np
 
 try:
-    from PIL import Image, ImageDraw, ImageFilter
+    from PIL import Image, ImageDraw
 except ModuleNotFoundError as exc:
     raise SystemExit(
         "Missing Pillow dependency. Run with Pixi environment."
@@ -38,12 +40,21 @@ class OcclusionFilterConfig:
     black_rgb_max: int = 55
     black_hsv_v_max: int = 70
     black_hsv_s_max: int = 90
-    black_mask_dilate_k: int = 5
-    gripper_roi_w_px: int = 220
-    gripper_roi_h_px: int = 220
-    drop_rule: str = "both_occluded"  # both_occluded | either_occluded
+    drop_rule: str = "either_occluded"  # both_occluded | either_occluded
     log_occlusion_stats: bool = True
     prefer_bin_for_occlusion: bool = False
+
+    # Fast image-only gate + local patch settings.
+    use_fast_bottom_patch_occlusion: bool = True
+    bottom_strip_fraction: float = 0.25
+    bottom_black_ratio_threshold: float = 0.01
+    kp_patch_radius_px: int = 8
+    kp_black_ratio_threshold: float = 0.45
+
+    # Backward-compat args retained for CLI compatibility (currently unused).
+    black_mask_dilate_k: int = 1
+    gripper_roi_w_px: int = 220
+    gripper_roi_h_px: int = 220
 
 
 ACTIVE_OCCLUSION_CONFIG = OcclusionFilterConfig()
@@ -51,9 +62,11 @@ ACTIVE_OCCLUSION_CONFIG = OcclusionFilterConfig()
 
 @dataclass(frozen=True)
 class OcclusionContext:
-    black_mask: np.ndarray
-    roi_bounds_xyxy: tuple[int, int, int, int]  # x1,y1,x2,y2; x2/y2 exclusive
-    tcp_uv_px: tuple[float, float]
+    width: int
+    height: int
+    bottom_strip_xyxy: tuple[int, int, int, int]
+    bottom_black_ratio: float
+    gate_triggered: bool
 
 
 def _to_bool_arg(v: Any) -> bool:
@@ -64,16 +77,8 @@ def _to_bool_arg(v: Any) -> bool:
     return bool(v)
 
 
-def _dilate_mask(mask: np.ndarray, k: int) -> np.ndarray:
-    k = int(k)
-    if k <= 1:
-        return mask
-    if k % 2 == 0:
-        k += 1
-    pil = Image.fromarray((mask.astype(np.uint8) * 255), mode="L")
-    pil = pil.filter(ImageFilter.MaxFilter(size=k))
-    out = np.array(pil, dtype=np.uint8)
-    return out > 0
+def _clamp01(x: float) -> float:
+    return max(0.0, min(1.0, float(x)))
 
 
 def _rgb_to_hsv_sv(rgb: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -93,46 +98,35 @@ def _rgb_to_hsv_sv(rgb: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return s, v
 
 
-def _build_black_mask(rgb: np.ndarray, cfg: OcclusionFilterConfig) -> np.ndarray:
+def _black_mask(rgb: np.ndarray, cfg: OcclusionFilterConfig) -> np.ndarray:
     max_rgb = np.max(rgb, axis=2)
     rgb_gate = max_rgb <= int(cfg.black_rgb_max)
     s, v = _rgb_to_hsv_sv(rgb)
     hsv_gate = (v * 255.0 <= float(cfg.black_hsv_v_max)) & (s * 255.0 <= float(cfg.black_hsv_s_max))
-    mask = rgb_gate & hsv_gate
-    return _dilate_mask(mask, cfg.black_mask_dilate_k)
+    return rgb_gate & hsv_gate
 
 
-def _tcp_point_from_frame(frame: dict[str, Any]) -> tuple[float, float, float] | None:
-    cs = frame.get("controller_state", {})
-    if not isinstance(cs, dict):
-        return None
-    tcp_pose = cs.get("tcp_pose", {})
-    if not isinstance(tcp_pose, dict):
-        return None
-    pos = tcp_pose.get("position", {})
-    if not isinstance(pos, dict):
-        return None
-    try:
-        return (float(pos["x"]), float(pos["y"]), float(pos["z"]))
-    except Exception:
-        return None
+def _bottom_strip_bounds(height: int, width: int, frac: float) -> tuple[int, int, int, int]:
+    frac = _clamp01(frac)
+    strip_h = max(1, int(round(height * frac)))
+    y1 = max(0, height - strip_h)
+    y2 = height
+    return (0, y1, width, y2)
 
 
-def _clip_roi(
+def _patch_bounds(
     *,
     cx: float,
     cy: float,
-    roi_w: int,
-    roi_h: int,
+    radius: int,
     width: int,
     height: int,
 ) -> tuple[int, int, int, int] | None:
-    half_w = max(1, int(roi_w) // 2)
-    half_h = max(1, int(roi_h) // 2)
-    x1 = max(0, int(round(cx)) - half_w)
-    y1 = max(0, int(round(cy)) - half_h)
-    x2 = min(int(width), int(round(cx)) + half_w)
-    y2 = min(int(height), int(round(cy)) + half_h)
+    r = max(1, int(radius))
+    x1 = max(0, int(round(cx)) - r)
+    y1 = max(0, int(round(cy)) - r)
+    x2 = min(width, int(round(cx)) + r + 1)
+    y2 = min(height, int(round(cy)) + r + 1)
     if x2 <= x1 or y2 <= y1:
         return None
     return (x1, y1, x2, y2)
@@ -140,62 +134,62 @@ def _clip_roi(
 
 def _build_occlusion_context(
     *,
-    frame: dict[str, Any],
-    sample: base.SampleRecord,
+    width: int,
+    height: int,
     rgb: np.ndarray,
     cfg: OcclusionFilterConfig,
 ) -> tuple[OcclusionContext | None, str | None]:
     if not cfg.enabled:
         return None, "disabled"
+    if not cfg.use_fast_bottom_patch_occlusion:
+        return None, "fast_mode_disabled"
 
-    width = int(sample.image_meta.get("width", rgb.shape[1]))
-    height = int(sample.image_meta.get("height", rgb.shape[0]))
+    x1, y1, x2, y2 = _bottom_strip_bounds(
+        height=height,
+        width=width,
+        frac=cfg.bottom_strip_fraction,
+    )
+    strip = rgb[y1:y2, x1:x2]
+    if strip.size == 0:
+        return None, "bottom_strip_empty"
 
-    p_tcp_base = _tcp_point_from_frame(frame)
-    tcp_proj = base._project_point(
-        p_base=p_tcp_base,
-        t_base_to_camera=sample.base_to_camera_optical,
-        camera_info=sample.camera_info,
+    strip_black = _black_mask(strip, cfg)
+    ratio = float(np.mean(strip_black)) if strip_black.size > 0 else 0.0
+    gate_triggered = ratio >= float(cfg.bottom_black_ratio_threshold)
+    ctx = OcclusionContext(
+        width=width,
+        height=height,
+        bottom_strip_xyxy=(x1, y1, x2, y2),
+        bottom_black_ratio=ratio,
+        gate_triggered=gate_triggered,
+    )
+    return ctx, None
+
+
+def _keypoint_black_ratio(
+    *,
+    rgb: np.ndarray,
+    u: float,
+    v: float,
+    cfg: OcclusionFilterConfig,
+    width: int,
+    height: int,
+) -> tuple[float | None, tuple[int, int, int, int] | None]:
+    pb = _patch_bounds(
+        cx=float(u),
+        cy=float(v),
+        radius=cfg.kp_patch_radius_px,
         width=width,
         height=height,
     )
-    uv = tcp_proj.get("uv")
-    vis = int(tcp_proj.get("visibility_flag", 0))
-    if uv is None or vis <= 0:
-        return None, "tcp_projection_unavailable"
-
-    roi = _clip_roi(
-        cx=float(uv[0]),
-        cy=float(uv[1]),
-        roi_w=cfg.gripper_roi_w_px,
-        roi_h=cfg.gripper_roi_h_px,
-        width=width,
-        height=height,
-    )
-    if roi is None:
-        return None, "roi_invalid"
-
-    mask = _build_black_mask(rgb, cfg)
-    return (
-        OcclusionContext(
-            black_mask=mask,
-            roi_bounds_xyxy=roi,
-            tcp_uv_px=(float(uv[0]), float(uv[1])),
-        ),
-        None,
-    )
-
-
-def _in_black_roi(ctx: OcclusionContext, u: float, v: float) -> bool:
-    h, w = ctx.black_mask.shape
-    ui = int(round(float(u)))
-    vi = int(round(float(v)))
-    if ui < 0 or vi < 0 or ui >= w or vi >= h:
-        return False
-    x1, y1, x2, y2 = ctx.roi_bounds_xyxy
-    if ui < x1 or ui >= x2 or vi < y1 or vi >= y2:
-        return False
-    return bool(ctx.black_mask[vi, ui])
+    if pb is None:
+        return None, None
+    x1, y1, x2, y2 = pb
+    patch = rgb[y1:y2, x1:x2]
+    if patch.size == 0:
+        return None, pb
+    ratio = float(np.mean(_black_mask(patch, cfg)))
+    return ratio, pb
 
 
 def _apply_occlusion_to_instance(
@@ -203,6 +197,7 @@ def _apply_occlusion_to_instance(
     instance: dict[str, Any],
     ctx: OcclusionContext | None,
     cfg: OcclusionFilterConfig,
+    rgb: np.ndarray | None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     decision = {
         "module_name": str(instance.get("module_name", "")),
@@ -212,9 +207,20 @@ def _apply_occlusion_to_instance(
         "link_occluded": False,
         "entrance_occluded": False,
         "occlusion_filter_applied": bool(ctx is not None),
+        "gate_triggered": bool(ctx.gate_triggered) if ctx is not None else False,
+        "bottom_black_ratio": None if ctx is None else float(ctx.bottom_black_ratio),
+        "link_patch_black_ratio": None,
+        "entrance_patch_black_ratio": None,
+        "link_patch_xyxy": None,
+        "entrance_patch_xyxy": None,
     }
-    if ctx is None:
+
+    if ctx is None or rgb is None:
         decision["drop_reason"] = "occlusion_ctx_unavailable"
+        return instance, decision
+
+    if not ctx.gate_triggered:
+        decision["drop_reason"] = "gate_not_triggered"
         return instance, decision
 
     out = dict(instance)
@@ -223,13 +229,34 @@ def _apply_occlusion_to_instance(
         decision["drop_reason"] = "missing_keypoints"
         return out, decision
 
+    width, height = ctx.width, ctx.height
     link_occ = False
     entrance_occ = False
+
     for idx in (0, 1):
         u, v, vis = keypoints[idx]
         if float(vis) <= 0.0:
             continue
-        if _in_black_roi(ctx, float(u), float(v)):
+
+        ratio, patch_xyxy = _keypoint_black_ratio(
+            rgb=rgb,
+            u=float(u),
+            v=float(v),
+            cfg=cfg,
+            width=width,
+            height=height,
+        )
+        if idx == 0:
+            decision["link_patch_black_ratio"] = ratio
+            decision["link_patch_xyxy"] = None if patch_xyxy is None else list(patch_xyxy)
+        else:
+            decision["entrance_patch_black_ratio"] = ratio
+            decision["entrance_patch_xyxy"] = None if patch_xyxy is None else list(patch_xyxy)
+
+        if ratio is None:
+            continue
+
+        if ratio >= float(cfg.kp_black_ratio_threshold):
             keypoints[idx][2] = 0.0
             if idx == 0:
                 link_occ = True
@@ -239,10 +266,10 @@ def _apply_occlusion_to_instance(
     decision["link_occluded"] = link_occ
     decision["entrance_occluded"] = entrance_occ
 
-    if cfg.drop_rule == "either_occluded":
-        drop = link_occ or entrance_occ
-    else:
+    if cfg.drop_rule == "both_occluded":
         drop = link_occ and entrance_occ
+    else:
+        drop = link_occ or entrance_occ
 
     if drop:
         decision["drop"] = True
@@ -250,6 +277,8 @@ def _apply_occlusion_to_instance(
         return None, decision
 
     out["keypoints"] = keypoints
+    if link_occ or entrance_occ:
+        decision["drop_reason"] = "partial_occlusion_kept"
     return out, decision
 
 
@@ -261,23 +290,37 @@ def _frame_iter(
     episode_dirs = sorted(
         [p for p in episodes_root.iterdir() if p.is_dir() and p.name.startswith("episode_")]
     )
+    LOGGER.info("Indexing episodes from %s (count=%d, tail_fraction=%.3f)", episodes_root, len(episode_dirs), episode_tail_fraction)
     for episode_dir in episode_dirs:
         frames_path = episode_dir / "frames.jsonl"
         if not frames_path.is_file():
+            LOGGER.warning("Skipping %s (missing frames.jsonl)", episode_dir)
             continue
-        frames: list[dict[str, Any]] = []
+
+        # Two-pass streaming so we can keep only tail without loading entire file into memory.
+        total = 0
+        with frames_path.open("r", encoding="utf-8") as fin:
+            for line in fin:
+                if line.strip():
+                    total += 1
+        if total == 0:
+            LOGGER.warning("Skipping %s (empty frames.jsonl)", episode_dir)
+            continue
+
+        keep_n = total
+        if episode_tail_fraction < 1.0:
+            keep_n = max(1, int(np.ceil(total * episode_tail_fraction)))
+
+        q: deque[dict[str, Any]] = deque(maxlen=keep_n)
         with frames_path.open("r", encoding="utf-8") as fin:
             for line in fin:
                 line = line.strip()
                 if not line:
                     continue
-                frames.append(json.loads(line))
-        if not frames:
-            continue
-        if episode_tail_fraction < 1.0:
-            keep_n = max(1, int(np.ceil(len(frames) * episode_tail_fraction)))
-            frames = frames[-keep_n:]
-        for frame in frames:
+                q.append(json.loads(line))
+
+        LOGGER.info("Episode %s: total_frames=%d kept_tail=%d", episode_dir.name, total, len(q))
+        for frame in q:
             yield episode_dir, frame
 
 
@@ -288,6 +331,7 @@ def build_samples_index_occlusion(
     require_both_keypoints: bool,
     episode_tail_fraction: float = 1.0,
     collect_decisions: bool = False,
+    log_every_n: int = 25,
 ) -> tuple[list[base.SampleRecord], list[dict[str, Any]]]:
     cfg = ACTIVE_OCCLUSION_CONFIG
     samples: list[base.SampleRecord] = []
@@ -297,11 +341,16 @@ def build_samples_index_occlusion(
     kept_ports = 0
     dropped_ports = 0
     missing_ctx = 0
+    frame_count = 0
+    camera_samples = 0
+    gate_triggered_samples = 0
+    log_every_n = max(1, int(log_every_n))
 
     for episode_dir, frame in _frame_iter(
         episodes_root=episodes_root,
         episode_tail_fraction=episode_tail_fraction,
     ):
+        frame_count += 1
         training_gt = frame.get("training_gt", {})
         all_ports_gt = training_gt.get("all_ports_gt_base", [])
         if not isinstance(all_ports_gt, list):
@@ -326,38 +375,8 @@ def build_samples_index_occlusion(
             camera_info = camera_info_all.get(cam, {})
             t_base_to_camera = cam_tfs.get(cam)
 
-            sample_stub = base.SampleRecord(
-                episode_dir=episode_dir,
-                episode_id=episode_id,
-                frame_idx=frame_idx,
-                obs_stamp=obs_stamp,
-                camera_name=cam,
-                image_meta=image_meta,
-                camera_info=camera_info,
-                base_to_camera_optical=t_base_to_camera,
-                instances=[],
-            )
-
-            occlusion_ctx: OcclusionContext | None = None
-            occlusion_err: str | None = None
-            if cfg.enabled:
-                rgb = base._load_rgb_image(
-                    episode_dir=episode_dir,
-                    image_meta=image_meta,
-                    prefer_bin=cfg.prefer_bin_for_occlusion,
-                )
-                occlusion_ctx, occlusion_err = _build_occlusion_context(
-                    frame=frame,
-                    sample=sample_stub,
-                    rgb=rgb,
-                    cfg=cfg,
-                )
-                if occlusion_ctx is None:
-                    missing_ctx += 1
-
-            kept_instances: list[dict[str, Any]] = []
+            prelim: list[dict[str, Any]] = []
             cam_decisions: list[dict[str, Any]] = []
-
             for port_gt in all_ports_gt:
                 if not isinstance(port_gt, dict):
                     continue
@@ -381,14 +400,44 @@ def build_samples_index_occlusion(
                             "link_occluded": False,
                             "entrance_occluded": False,
                             "occlusion_filter_applied": False,
+                            "gate_triggered": False,
+                            "bottom_black_ratio": None,
+                            "link_patch_black_ratio": None,
+                            "entrance_patch_black_ratio": None,
+                            "link_patch_xyxy": None,
+                            "entrance_patch_xyxy": None,
                         }
                     )
                     continue
+                prelim.append(inst)
 
+            occlusion_ctx: OcclusionContext | None = None
+            occlusion_err: str | None = None
+            rgb: np.ndarray | None = None
+            if cfg.enabled and prelim:
+                rgb = base._load_rgb_image(
+                    episode_dir=episode_dir,
+                    image_meta=image_meta,
+                    prefer_bin=cfg.prefer_bin_for_occlusion,
+                )
+                occlusion_ctx, occlusion_err = _build_occlusion_context(
+                    width=width,
+                    height=height,
+                    rgb=rgb,
+                    cfg=cfg,
+                )
+                if occlusion_ctx is None:
+                    missing_ctx += 1
+                elif occlusion_ctx.gate_triggered:
+                    gate_triggered_samples += 1
+
+            kept_instances: list[dict[str, Any]] = []
+            for inst in prelim:
                 out, decision = _apply_occlusion_to_instance(
                     instance=inst,
                     ctx=occlusion_ctx,
                     cfg=cfg,
+                    rgb=rgb,
                 )
                 if occlusion_ctx is None and occlusion_err:
                     decision["drop_reason"] = occlusion_err
@@ -413,6 +462,18 @@ def build_samples_index_occlusion(
                 )
             )
 
+            camera_samples += 1
+            if camera_samples % log_every_n == 0:
+                LOGGER.info(
+                    "Indexing progress: frames=%d camera_samples=%d total_ports=%d kept_ports=%d dropped_ports=%d gate_triggered_samples=%d",
+                    frame_count,
+                    camera_samples,
+                    total_ports,
+                    kept_ports,
+                    dropped_ports,
+                    gate_triggered_samples,
+                )
+
             if collect_decisions:
                 decisions.append(
                     {
@@ -423,21 +484,23 @@ def build_samples_index_occlusion(
                         "camera_name": cam,
                         "image_meta": image_meta,
                         "decisions": cam_decisions,
-                        "tcp_projection": None if occlusion_ctx is None else {
-                            "uv_px": [occlusion_ctx.tcp_uv_px[0], occlusion_ctx.tcp_uv_px[1]],
-                            "roi_xyxy": list(occlusion_ctx.roi_bounds_xyxy),
+                        "bottom_strip": None if occlusion_ctx is None else {
+                            "xyxy": list(occlusion_ctx.bottom_strip_xyxy),
+                            "black_ratio": float(occlusion_ctx.bottom_black_ratio),
+                            "gate_triggered": bool(occlusion_ctx.gate_triggered),
                         },
                     }
                 )
 
     if cfg.log_occlusion_stats:
         LOGGER.info(
-            "Occlusion filter stats: enabled=%s total_ports=%d kept_ports=%d dropped_ports=%d missing_ctx=%d",
+            "Occlusion filter stats: enabled=%s total_ports=%d kept_ports=%d dropped_ports=%d missing_ctx=%d gate_triggered_samples=%d",
             cfg.enabled,
             total_ports,
             kept_ports,
             dropped_ports,
             missing_ctx,
+            gate_triggered_samples,
         )
 
     return samples, decisions
@@ -456,6 +519,7 @@ def _patched_build_samples_index(
         require_both_keypoints=require_both_keypoints,
         episode_tail_fraction=episode_tail_fraction,
         collect_decisions=False,
+        log_every_n=int(getattr(base, "CLI_LOG_EVERY_N", 25)),
     )
     return samples
 
@@ -467,12 +531,17 @@ def _args_to_cfg(args: argparse.Namespace) -> OcclusionFilterConfig:
         black_rgb_max=int(getattr(args, "black_rgb_max", 55)),
         black_hsv_v_max=int(getattr(args, "black_hsv_v_max", 70)),
         black_hsv_s_max=int(getattr(args, "black_hsv_s_max", 90)),
-        black_mask_dilate_k=int(getattr(args, "black_mask_dilate_k", 5)),
-        gripper_roi_w_px=int(getattr(args, "gripper_roi_w_px", 220)),
-        gripper_roi_h_px=int(getattr(args, "gripper_roi_h_px", 220)),
-        drop_rule=str(getattr(args, "drop_rule", "both_occluded")),
+        drop_rule=str(getattr(args, "drop_rule", "either_occluded")),
         log_occlusion_stats=_to_bool_arg(getattr(args, "log_occlusion_stats", True)),
         prefer_bin_for_occlusion=_to_bool_arg(getattr(args, "prefer_bin_for_occlusion", False)),
+        use_fast_bottom_patch_occlusion=_to_bool_arg(getattr(args, "use_fast_bottom_patch_occlusion", True)),
+        bottom_strip_fraction=float(getattr(args, "bottom_strip_fraction", 0.25)),
+        bottom_black_ratio_threshold=float(getattr(args, "bottom_black_ratio_threshold", 0.01)),
+        kp_patch_radius_px=int(getattr(args, "kp_patch_radius_px", 8)),
+        kp_black_ratio_threshold=float(getattr(args, "kp_black_ratio_threshold", 0.45)),
+        black_mask_dilate_k=int(getattr(args, "black_mask_dilate_k", 1)),
+        gripper_roi_w_px=int(getattr(args, "gripper_roi_w_px", 220)),
+        gripper_roi_h_px=int(getattr(args, "gripper_roi_h_px", 220)),
     )
 
 
@@ -485,6 +554,7 @@ def _set_active_cfg_from_args(args: argparse.Namespace) -> None:
 def _wrap_base_func(fn):
     def _wrapped(args: argparse.Namespace):
         _set_active_cfg_from_args(args)
+        setattr(base, "CLI_LOG_EVERY_N", int(getattr(args, "log_every_n", 25)))
         return fn(args)
 
     return _wrapped
@@ -492,22 +562,32 @@ def _wrap_base_func(fn):
 
 def _add_occlusion_args(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("--occlusion-filter-enabled", default="true")
+
+    subparser.add_argument("--use-fast-bottom-patch-occlusion", default="true")
+    subparser.add_argument("--bottom-strip-fraction", type=float, default=0.25)
+    subparser.add_argument("--bottom-black-ratio-threshold", type=float, default=0.01)
+    subparser.add_argument("--kp-patch-radius-px", type=int, default=8)
+    subparser.add_argument("--kp-black-ratio-threshold", type=float, default=0.45)
+
     subparser.add_argument("--black-rgb-max", type=int, default=55)
     subparser.add_argument("--black-hsv-v-max", type=int, default=70)
     subparser.add_argument("--black-hsv-s-max", type=int, default=90)
-    subparser.add_argument("--black-mask-dilate-k", type=int, default=5)
+
+    # Retained for compatibility with prior CLI calls; ignored in fast mode.
+    subparser.add_argument("--black-mask-dilate-k", type=int, default=1)
     subparser.add_argument("--gripper-roi-w-px", type=int, default=220)
     subparser.add_argument("--gripper-roi-h-px", type=int, default=220)
+
     subparser.add_argument(
         "--drop-rule",
         choices=["both_occluded", "either_occluded"],
-        default="both_occluded",
+        default="either_occluded",
     )
     subparser.add_argument("--log-occlusion-stats", default="true")
     subparser.add_argument(
         "--prefer-bin-for-occlusion",
         default="false",
-        help="Use .bin instead of debug image when building black mask/ROI checks.",
+        help="Use .bin instead of debug image when reading occlusion image data.",
     )
 
 
@@ -524,6 +604,7 @@ def run_preview_occlusion(args: argparse.Namespace) -> None:
         require_both_keypoints=bool(args.require_both_keypoints),
         episode_tail_fraction=float(args.episode_tail_fraction),
         collect_decisions=True,
+        log_every_n=int(getattr(args, "log_every_n", 25)),
     )
 
     if args.camera != "all":
@@ -552,31 +633,38 @@ def run_preview_occlusion(args: argparse.Namespace) -> None:
             canvas = Image.fromarray(rgb, mode="RGB")
             draw = ImageDraw.Draw(canvas)
 
-            cfg = ACTIVE_OCCLUSION_CONFIG
-            black = _build_black_mask(rgb, cfg)
-            ys, xs = np.where(black)
-            if xs.size > 0:
-                step = max(1, int(args.mask_point_stride_px))
-                for x, y in zip(xs[::step], ys[::step]):
-                    draw.point((int(x), int(y)), fill=(0, 255, 255))
-
-            tcp = row.get("tcp_projection")
-            if isinstance(tcp, dict):
-                roi = tcp.get("roi_xyxy", [])
-                if isinstance(roi, list) and len(roi) == 4:
-                    x1, y1, x2, y2 = [int(v) for v in roi]
+            bottom = row.get("bottom_strip")
+            if isinstance(bottom, dict):
+                xyxy = bottom.get("xyxy", [])
+                if isinstance(xyxy, list) and len(xyxy) == 4:
+                    x1, y1, x2, y2 = [int(v) for v in xyxy]
                     draw.rectangle([(x1, y1), (x2, y2)], outline=(255, 165, 0), width=2)
-                uv = tcp.get("uv_px", [])
-                if isinstance(uv, list) and len(uv) == 2:
-                    u, v = float(uv[0]), float(uv[1])
-                    r = 4
-                    draw.ellipse([(u - r, v - r), (u + r, v + r)], outline=(255, 165, 0), width=2)
+
+                    # Visualize black points in bottom strip sparsely.
+                    cfg = ACTIVE_OCCLUSION_CONFIG
+                    strip = rgb[y1:y2, x1:x2]
+                    if strip.size > 0:
+                        b = _black_mask(strip, cfg)
+                        ys, xs = np.where(b)
+                        step = max(1, int(args.mask_point_stride_px))
+                        for x, y in zip(xs[::step], ys[::step]):
+                            draw.point((int(x1 + x), int(y1 + y)), fill=(0, 255, 255))
+
+                ratio = float(bottom.get("black_ratio", 0.0))
+                gate = bool(bottom.get("gate_triggered", False))
+                draw.text((8, 8), f"bottom_black_ratio={ratio:.3f} gate={gate}", fill=(255, 200, 0))
 
             for d_i, d in enumerate(row["decisions"]):
                 name = f"{d.get('module_name','')}:{d.get('port_name','')}"
                 txt = f"{name} {'DROP' if d.get('drop') else 'KEEP'} {d.get('drop_reason','')}"
                 color = (255, 64, 64) if d.get("drop") else (64, 220, 64)
-                draw.text((8, 8 + d_i * 14), txt, fill=color)
+                draw.text((8, 28 + d_i * 14), txt, fill=color)
+
+                for patch_key, patch_color in (("link_patch_xyxy", (64, 128, 255)), ("entrance_patch_xyxy", (255, 255, 64))):
+                    patch = d.get(patch_key)
+                    if isinstance(patch, list) and len(patch) == 4:
+                        px1, py1, px2, py2 = [int(v) for v in patch]
+                        draw.rectangle([(px1, py1), (px2, py2)], outline=patch_color, width=2)
 
             out_name = f"{i:04d}_{row['episode_id']}_f{int(row['frame_idx']):06d}_{row['camera_name']}.png"
             out_path = output_dir / out_name
@@ -631,7 +719,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
     p_preview_occ = subparsers_action.add_parser(
         "preview-occlusion",
-        help="Visual QA for black-mask + TCP ROI occlusion filtering decisions.",
+        help="Visual QA for fast bottom-strip + local-patch occlusion filtering decisions.",
     )
     p_preview_occ.add_argument("--episodes-root", required=True)
     p_preview_occ.add_argument("--output-dir", required=True)
@@ -681,6 +769,7 @@ def main() -> None:
     logging.basicConfig(
         level=getattr(logging, str(getattr(args, "log_level", "INFO")).upper(), logging.INFO),
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        force=True,
     )
     LOGGER.info("Command=%s", args.cmd)
     args.func(args)
