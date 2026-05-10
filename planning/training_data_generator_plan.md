@@ -20,12 +20,15 @@ Run in this exact order.
 
 Terminal 1 (host: create fresh eval runtime once):
 ```bash
-AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_new_eval.sh
+sudo usermod -aG docker $USER
+newgrp docker
+
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/my_aic_setup/aic//scripts/enter_new_eval.sh
 ```
 
 Terminal 2 (host: join runtime for sim bringup):
 ```bash
-AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/my_aic_setup/aic//scripts/enter_eval.sh
 ```
 Then run:
 ```bash
@@ -46,7 +49,7 @@ export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
 Terminal 3 (host: join runtime for xacro service):
 ```bash
-AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/my_aic_setup/aic//scripts/enter_eval.sh
 ```
 Then run:
 ```bash
@@ -57,12 +60,12 @@ export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
 pkill -f xacro_expander.py || true
-python3 /home/user/aic/aic_utils/aic_training_utils/scripts/xacro_expander.py
+python3 /home/user/aic/my_aic_setup/aic//aic_utils/aic_training_utils/scripts/xacro_expander.py
 ```
 
 Terminal 4 (host: join runtime for ProximityTeacher model):
 ```bash
-AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/my_aic_setup/aic//scripts/enter_eval.sh
 ```
 Then run:
 ```bash
@@ -79,7 +82,7 @@ pixi run -- ros2 run aic_model aic_model --ros-args \
 
 Terminal 5 (host: join runtime for training frame sink):
 ```bash
-AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/my_aic_setup/aic//scripts/enter_eval.sh
 ```
 Then run:
 ```bash
@@ -89,12 +92,12 @@ set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
-pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/training_frame_sink.py --ros-args \
+pixi run -- python3 /home/user/aic/my_aic_setup/aic//aic_utils/aic_training_utils/scripts/training_frame_sink.py --ros-args \
   -p observation_qos:=sensor_data \
-  -p max_pending_frames:=128 \
+  -p max_pending_frames:=5120 \
   -p write_workers:=2 \
-  -p convert_workers:=1 \
-  -p postprocess_workers:=1 \
+  -p convert_workers:=2 \
+  -p postprocess_workers:=2 \
   -p postprocess_visibility_labels:=true \
   -p postprocess_labels_filename:=labels_visibility_occlusion.jsonl \
   -p defer_gt_to_postprocess:=true \
@@ -106,7 +109,7 @@ pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/training
 
 Terminal 6 (host: join runtime for generator):
 ```bash
-AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh
+AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/my_aic_setup/aic//scripts/enter_eval.sh
 ```
 Then run:
 ```bash
@@ -116,10 +119,10 @@ set -u
 export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 export ZENOH_CONFIG_OVERRIDE='transport/shared_memory/enabled=false'
 
-/home/user/aic/scripts/run_proximity_generator_eval.sh --ros-args \
+/home/user/aic/my_aic_setup/aic/scripts/run_proximity_generator_eval.sh --ros-args \
   -p num_episodes:=5000 \
-  -p seed:=429508 \
-  -p output_root:=/home/user/training_data/visual_motor_policy/updated_training_data \
+  -p seed:=420 \
+  -p output_root:=/home/user/training_data/visual_motor_policy/main \
   -p use_frame_sink:=true \
   -p frame_sink_service_ns:=/training_frame_sink \
   -p frame_sink_require_webp_done:=true \

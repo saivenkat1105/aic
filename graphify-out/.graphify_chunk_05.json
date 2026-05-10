@@ -1,0 +1,828 @@
+{
+  "nodes": [
+    {
+      "id": "add_cable_plugin_refinement_flow",
+      "label": "add_cable_plugin Refinement Flow",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postprocess_robot_xml",
+      "label": "postprocess_robot_xml()",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "postprocess_world_xml",
+      "label": "postprocess_world_xml()",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "mujoco_robot_world_split",
+      "label": "MuJoCo Robot/World Split",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "mujoco_cable_plugin_configuration",
+      "label": "MuJoCo Cable Plugin Configuration",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "load_aic_world_converter",
+      "label": "load_aic_world SDF-to-MJCF Converter",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_mujoco/scripts/load_aic_world.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "view_scene_mujoco_viewer",
+      "label": "view_scene MuJoCo Viewer",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_mujoco/scripts/view_scene.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "sim_comparison_node",
+      "label": "SimComparisonNode",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_mujoco/scripts/sim_comparison_test.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "sim_comparison_test_sequence",
+      "label": "Simulator Comparison Test Sequence",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_mujoco/scripts/sim_comparison_test.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "compare_trajectories",
+      "label": "compare_trajectories()",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_mujoco/scripts/sim_comparison_test.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_teleoperation_package",
+      "label": "aic_teleoperation Package",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_teleoperation/setup.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_cartesian_teleoperator_node",
+      "label": "AICCartesianTeleoperatorNode",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_joint_teleoperator_node",
+      "label": "AICTeleoperatorNode",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ssh_keyboard_input_loop",
+      "label": "SSH Keyboard Input Loop",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop_ssh.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "cartesian_velocity_motion_update",
+      "label": "Cartesian Velocity MotionUpdate",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "joint_velocity_motion_update",
+      "label": "Joint Velocity JointMotionUpdate",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_training_gz_bringup_launch",
+      "label": "aic_training_gz_bringup Launch",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_training_utils/launch/aic_training_gz_bringup.launch.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "xacro_expander_node",
+      "label": "XacroExpanderNode",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_training_utils/scripts/xacro_expander.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "bin_to_lossless_webp_prune",
+      "label": "bin_to_lossless_webp_prune",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_prune.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "bin_to_webp_converter",
+      "label": "bin_to_webp_converter",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ros_image_bin_to_webp_pipeline",
+      "label": "ROS Image .bin to WebP Pipeline",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_prune.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "episode_spec",
+      "label": "EpisodeSpec",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "proximity_data_generator",
+      "label": "ProximityDataGenerator",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "proximity_training_episode_loop",
+      "label": "Proximity Training Episode Loop",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "training_frame_sink",
+      "label": "TrainingFrameSink",
+      "file_type": "code",
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "frame_sink_sidecar_pipeline",
+      "label": "Frame Sink Sidecar Pipeline",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "visibility_occlusion_label_generation",
+      "label": "Visibility/Occlusion Label Generation",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_robot_lerobot_config",
+      "label": "AIC LeRobot Camera Configuration",
+      "file_type": "code",
+      "source_file": "aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_robot.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "lerobot_robot_aic_package",
+      "label": "lerobot_robot_aic Package",
+      "file_type": "code",
+      "source_file": "aic_utils/lerobot_robot_aic/setup.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_training_frame_schema",
+      "label": "visual_proximity_v1 Frame Schema",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_controller_change_target_mode_service",
+      "label": "aic_controller ChangeTargetMode Service",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "aic_gz_training_bringup_environment",
+      "label": "Gazebo Training Bringup Environment",
+      "file_type": "concept",
+      "source_file": "aic_utils/aic_training_utils/launch/aic_training_gz_bringup.launch.py",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "add_cable_plugin_refinement_flow",
+      "target": "mujoco_robot_world_split",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.98,
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "add_cable_plugin_refinement_flow",
+      "target": "postprocess_robot_xml",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "add_cable_plugin_refinement_flow",
+      "target": "postprocess_world_xml",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "add_cable_plugin_refinement_flow",
+      "target": "mujoco_cable_plugin_configuration",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.98,
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "postprocess_robot_xml",
+      "target": "mujoco_robot_world_split",
+      "relation": "refines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "postprocess_world_xml",
+      "target": "mujoco_cable_plugin_configuration",
+      "relation": "refines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.96,
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "load_aic_world_converter",
+      "target": "mujoco_robot_world_split",
+      "relation": "prepares_input_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.74,
+      "source_file": "aic_utils/aic_mujoco/scripts/load_aic_world.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "view_scene_mujoco_viewer",
+      "target": "mujoco_robot_world_split",
+      "relation": "validates_output_of",
+      "confidence": "INFERRED",
+      "confidence_score": 0.79,
+      "source_file": "aic_utils/aic_mujoco/scripts/view_scene.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "sim_comparison_node",
+      "target": "sim_comparison_test_sequence",
+      "relation": "executes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.98,
+      "source_file": "aic_utils/aic_mujoco/scripts/sim_comparison_test.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "sim_comparison_node",
+      "target": "joint_velocity_motion_update",
+      "relation": "publishes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.94,
+      "source_file": "aic_utils/aic_mujoco/scripts/sim_comparison_test.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "sim_comparison_node",
+      "target": "aic_controller_change_target_mode_service",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.96,
+      "source_file": "aic_utils/aic_mujoco/scripts/sim_comparison_test.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "compare_trajectories",
+      "target": "sim_comparison_test_sequence",
+      "relation": "analyzes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.97,
+      "source_file": "aic_utils/aic_mujoco/scripts/sim_comparison_test.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_teleoperation_package",
+      "target": "aic_cartesian_teleoperator_node",
+      "relation": "exposes_console_script",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aic_utils/aic_teleoperation/setup.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_teleoperation_package",
+      "target": "aic_joint_teleoperator_node",
+      "relation": "exposes_console_script",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aic_utils/aic_teleoperation/setup.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_cartesian_teleoperator_node",
+      "target": "cartesian_velocity_motion_update",
+      "relation": "publishes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_cartesian_teleoperator_node",
+      "target": "aic_controller_change_target_mode_service",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.98,
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_joint_teleoperator_node",
+      "target": "joint_velocity_motion_update",
+      "relation": "publishes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_joint_teleoperator_node",
+      "target": "aic_controller_change_target_mode_service",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.98,
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ssh_keyboard_input_loop",
+      "target": "aic_cartesian_teleoperator_node",
+      "relation": "adapts",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.91,
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/cartesian_keyboard_teleop_ssh.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ssh_keyboard_input_loop",
+      "target": "aic_joint_teleoperator_node",
+      "relation": "adapts",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.91,
+      "source_file": "aic_utils/aic_teleoperation/aic_teleoperation/joint_keyboard_teleop_ssh.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_training_gz_bringup_launch",
+      "target": "aic_gz_training_bringup_environment",
+      "relation": "launches",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_training_utils/launch/aic_training_gz_bringup.launch.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_training_gz_bringup_launch",
+      "target": "xacro_expander_node",
+      "relation": "launches",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aic_utils/aic_training_utils/launch/aic_training_gz_bringup.launch.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "xacro_expander_node",
+      "target": "proximity_data_generator",
+      "relation": "serves",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.93,
+      "source_file": "aic_utils/aic_training_utils/scripts/xacro_expander.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "proximity_data_generator",
+      "target": "episode_spec",
+      "relation": "creates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "proximity_data_generator",
+      "target": "proximity_training_episode_loop",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "proximity_data_generator",
+      "target": "xacro_expander_node",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.97,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "proximity_data_generator",
+      "target": "training_frame_sink",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.98,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "proximity_data_generator",
+      "target": "frame_sink_sidecar_pipeline",
+      "relation": "coordinates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.96,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "proximity_data_generator",
+      "target": "aic_training_frame_schema",
+      "relation": "writes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.93,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "proximity_training_episode_loop",
+      "target": "aic_gz_training_bringup_environment",
+      "relation": "requires",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.9,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_frame_sink",
+      "target": "frame_sink_sidecar_pipeline",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_frame_sink",
+      "target": "aic_training_frame_schema",
+      "relation": "writes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.98,
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_frame_sink",
+      "target": "ros_image_bin_to_webp_pipeline",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.94,
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "training_frame_sink",
+      "target": "visibility_occlusion_label_generation",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "visibility_occlusion_label_generation",
+      "target": "aic_training_frame_schema",
+      "relation": "derives_labels_from",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.96,
+      "source_file": "aic_utils/aic_training_utils/scripts/training_frame_sink.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "bin_to_lossless_webp_prune",
+      "target": "ros_image_bin_to_webp_pipeline",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_prune.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "bin_to_webp_converter",
+      "target": "ros_image_bin_to_webp_pipeline",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "bin_to_lossless_webp_prune",
+      "target": "aic_training_frame_schema",
+      "relation": "reads",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_prune.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "bin_to_webp_converter",
+      "target": "aic_training_frame_schema",
+      "relation": "reads",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_robot_lerobot_config",
+      "target": "lerobot_robot_aic_package",
+      "relation": "belongs_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.99,
+      "source_file": "aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_robot.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "aic_robot_lerobot_config",
+      "target": "aic_training_frame_schema",
+      "relation": "shares_camera_streams_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.76,
+      "source_file": "aic_utils/lerobot_robot_aic/lerobot_robot_aic/aic_robot.py",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "lerobot_robot_aic_package",
+      "target": "aic_robot_lerobot_config",
+      "relation": "packages",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.91,
+      "source_file": "aic_utils/lerobot_robot_aic/setup.py",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "mujoco_conversion_and_validation_toolchain",
+      "label": "MuJoCo Conversion and Validation Toolchain",
+      "nodes": [
+        "load_aic_world_converter",
+        "add_cable_plugin_refinement_flow",
+        "view_scene_mujoco_viewer",
+        "sim_comparison_node",
+        "compare_trajectories"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.83,
+      "source_file": "aic_utils/aic_mujoco/scripts/add_cable_plugin.py"
+    },
+    {
+      "id": "keyboard_teleoperation_command_stack",
+      "label": "Keyboard Teleoperation Command Stack",
+      "nodes": [
+        "aic_teleoperation_package",
+        "aic_cartesian_teleoperator_node",
+        "aic_joint_teleoperator_node",
+        "ssh_keyboard_input_loop",
+        "aic_controller_change_target_mode_service"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.9,
+      "source_file": "aic_utils/aic_teleoperation/setup.py"
+    },
+    {
+      "id": "training_data_capture_and_postprocess_pipeline",
+      "label": "Training Data Capture and Postprocess Pipeline",
+      "nodes": [
+        "aic_training_gz_bringup_launch",
+        "xacro_expander_node",
+        "proximity_data_generator",
+        "training_frame_sink",
+        "ros_image_bin_to_webp_pipeline",
+        "visibility_occlusion_label_generation"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.92,
+      "source_file": "aic_utils/aic_training_utils/scripts/proximity_data_generator.py"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

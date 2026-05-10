@@ -8,7 +8,7 @@ if [[ ! -f /ws_aic/install/setup.bash ]]; then
   echo "[ERROR] /ws_aic/install/setup.bash not found."
   echo "You are likely not inside a valid aic_eval runtime."
   echo "Recreate and enter a fresh eval container, then rerun:"
-  echo "  AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/scripts/enter_eval.sh"
+  echo "  AIC_EVAL_CONTAINER_NAME=aic_eval_training bash /home/user/aic/my_aic_setup/aic/scripts/enter_eval.sh"
   exit 1
 fi
 
@@ -24,4 +24,4 @@ echo "[INFO] Running preflight import check for ResetJoints..."
 pixi run -- python3 -c "from aic_engine_interfaces.srv import ResetJoints; print('ResetJoints import OK')"
 
 echo "[INFO] Starting proximity_data_generator.py in eval runtime..."
-exec pixi run -- python3 /home/user/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py "$@"
+exec pixi run -- python3 /home/user/aic/my_aic_setup/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py "$@"

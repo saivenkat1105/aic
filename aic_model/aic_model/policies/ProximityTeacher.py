@@ -43,10 +43,10 @@ from transforms3d._gohlketransforms import quaternion_multiply, quaternion_slerp
 class ProximityTeacher(Policy):
     """Training-only teacher that reaches no-contact standoff from target port."""
 
-    TF_WAIT_TIMEOUT_S = 10.0
+    TF_WAIT_TIMEOUT_S = 3.0
     APPROACH_DURATION_S = 10.0
-    APPROACH_STEPS = 100
-    SETTLE_EVERY_STEPS = 10
+    APPROACH_STEPS = 200
+    SETTLE_EVERY_STEPS = 0
     SETTLE_DURATION_S = 0.5
     STANDOFF_M = 0.020
     HOLD_DURATION_S = 0.2
