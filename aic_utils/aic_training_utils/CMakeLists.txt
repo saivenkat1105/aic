@@ -18,6 +18,7 @@ install(PROGRAMS
   scripts/training_frame_sink.py
   scripts/bin_to_webp_converter.py
   scripts/port_detector_c3.py
+  scripts/port_detector_c3_occlusion.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

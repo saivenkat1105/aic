@@ -48,10 +48,10 @@ Predicted keypoints per port instance:
 ## 3.1 Training/Test roots used
 
 Training episodes:
-- `/home/user/training_data/visual_motor_policy/updated_training_data/run_20260506_102554/episodes`
+- `/home/user/training_data/visual_motor_policy/main/run/episodes`
 
 Testing episodes:
-- `/home/user/training_data/visual_motor_policy/testing_data/run_20260506_193523/episodes`
+- `/home/user/training_data/visual_motor_policy/testing_data/run_20260509_080659/episodes`
 
 ## 3.2 How labels are created (all ports, not only task target)
 
@@ -83,14 +83,21 @@ Use `--prefer-bin` for inference to mimic evaluation-time `rgb8` arrays.
 
 Run with Pixi environment:
 
+From your active worktree root (for example `/home/user/.codex/worktrees/7437/aic`), use repo-relative script paths:
+
 ```bash
-pixi run -- python3 aic_utils/aic_training_utils/scripts/port_detector_c3.py inspect \
-  --episodes-root /home/user/training_data/visual_motor_policy/updated_training_data/run_20260506_102554/episodes
+cd "$(git rev-parse --show-toplevel)"
+REPO_ROOT="$(pwd)"
 ```
 
 ```bash
-pixi run -- python3 aic_utils/aic_training_utils/scripts/port_detector_c3.py preview-labels \
-  --episodes-root /home/user/training_data/visual_motor_policy/updated_training_data/run_20260506_102554/episodes \
+pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" inspect \
+  --episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes
+```
+
+```bash
+pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" preview-labels \
+  --episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes \
   --output-dir /home/user/training_data/visual_motor_policy/c3_runs/label_preview_run_001 \
   --num-samples 80 \
   --camera all \
@@ -100,8 +107,8 @@ pixi run -- python3 aic_utils/aic_training_utils/scripts/port_detector_c3.py pre
 ```
 
 ```bash
-pixi run -- python3 aic_utils/aic_training_utils/scripts/port_detector_c3.py train \
-  --train-episodes-root /home/user/training_data/visual_motor_policy/updated_training_data/run_20260506_102554/episodes \
+pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" train \
+  --train-episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes \
   --val-episodes-root /home/user/training_data/visual_motor_policy/testing_data/run_20260506_193523/episodes \
   --output-dir /home/user/training_data/visual_motor_policy/c3_runs/run_001 \
   --epochs 24 \
@@ -116,7 +123,7 @@ pixi run -- python3 aic_utils/aic_training_utils/scripts/port_detector_c3.py tra
 ```
 
 ```bash
-pixi run -- python3 aic_utils/aic_training_utils/scripts/port_detector_c3.py predict-episode \
+pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" predict-episode \
   --checkpoint /home/user/training_data/visual_motor_policy/c3_runs/run_001/best.pt \
   --episode-dir /home/user/training_data/visual_motor_policy/testing_data/run_20260506_193523/episodes/episode_000001 \
   --output-jsonl /home/user/training_data/visual_motor_policy/c3_runs/run_001/episode_000001_predictions.jsonl \
