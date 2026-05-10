@@ -96,7 +96,7 @@
     "hash": "354644598e82c0df527ac232c0408b31"
   },
   "/home/user/aic/my_aic_setup/aic/aic_utils/aic_training_utils/scripts/bin_to_webp_converter.py": {
-    "mtime": 1778388812.237582,
+    "mtime": 1778390921.4594595,
     "hash": "a4c3d7fc186841c1191e8ee8c33b33b5"
   },
   "/home/user/aic/my_aic_setup/aic/aic_utils/aic_training_utils/scripts/xacro_expander.py": {
@@ -104,8 +104,12 @@
     "hash": "15785f1a28bee325db3e867cb47177d7"
   },
   "/home/user/aic/my_aic_setup/aic/aic_utils/aic_training_utils/scripts/proximity_data_generator.py": {
-    "mtime": 1778312956.2770414,
+    "mtime": 1778390921.4594595,
     "hash": "f542e703a951ea22d36c04dac24ada7c"
+  },
+  "/home/user/aic/my_aic_setup/aic/aic_utils/aic_training_utils/scripts/delete_result_only_episodes.py": {
+    "mtime": 1778390925.531498,
+    "hash": "e700159f321eb153e9e3eab757d5be4c"
   },
   "/home/user/aic/my_aic_setup/aic/aic_utils/aic_training_utils/scripts/bin_to_lossless_webp_and_prune.py": {
     "mtime": 1778307732.8848224,
@@ -360,7 +364,7 @@
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "/home/user/aic/my_aic_setup/aic/aic_model/aic_model/policies/ProximityTeacher.py": {
-    "mtime": 1778313270.5543306,
+    "mtime": 1778390921.4584594,
     "hash": "299243cee83248d4b7fa0756df8bdadb"
   },
   "/home/user/aic/my_aic_setup/aic/aic_model/aic_model/policies/RunACTOffline.py": {
@@ -452,7 +456,7 @@
     "hash": "26f8e1fe073e93efcb65232035ce84cf"
   },
   "/home/user/aic/my_aic_setup/aic/planning/training_data_generator_plan.md": {
-    "mtime": 1778318325.854315,
+    "mtime": 1778390921.4894598,
     "hash": "09561bb69caa0f10a7a0cb8cf04ca5ff"
   },
   "/home/user/aic/my_aic_setup/aic/planning/sfp_visual_proximity_baseline_workflow.md": {
@@ -508,7 +512,7 @@
     "hash": "e2eef5ab01ede084a9b75c67b5f03be2"
   },
   "/home/user/aic/my_aic_setup/aic/aic_utils/aic_training_utils/CMakeLists.txt": {
-    "mtime": 1778307732.8848224,
+    "mtime": 1778390921.4594595,
     "hash": "d08c0d51ba42c62920c2a569cc3e46cc"
   },
   "/home/user/aic/my_aic_setup/aic/aic_utils/aic_foxglove/files.txt": {
