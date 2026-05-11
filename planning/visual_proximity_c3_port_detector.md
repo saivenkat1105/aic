@@ -98,12 +98,12 @@ pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detect
 ```bash
 pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" preview-labels \
   --episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes \
-  --output-dir /home/user/training_data/visual_motor_policy/c3_runs/label_preview_run_001 \
-  --num-samples 80 \
+  --output-dir /home/user//models/c3/run_001/preview_labels/trial_004 \
+  --num-samples 100 \
   --camera all \
   --seed 7 \
   --log-level INFO \
-  --log-every-n 10
+  --log-every-n 10 \
 ```
 
 ```bash
@@ -145,7 +145,7 @@ pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detect
   --episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes \
   --checkpoint /home/user/models/c3/run_001/train/trial_001/best.pt \
   --num-samples 120 \
-  --output-dir /home/user/models/c3/run_001/sample_test_predictions \
+  --output-dir /home/user/models/c3/run_001/predict/trial_003/images/ \
   --camera all \
   --seed 7 \
   --score-thresh 0.95 \
