@@ -143,9 +143,9 @@ REPO_ROOT="$(pwd)"
 ```bash
 pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" sample-test-predictions \
   --episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes \
-  --checkpoint /home/user/models/c3/run_001/train/trial_001/best.pt \
+  --checkpoint /home/user/models/c3/run_002/train/best.pt \
   --num-samples 120 \
-  --output-dir /home/user/models/c3/run_001/predict/trial_003/images/ \
+  --output-dir /home/user/models/c3/run_002/predict/trial_001/images/ \
   --camera all \
   --seed 7 \
   --score-thresh 0.95 \
