@@ -19,6 +19,7 @@ install(PROGRAMS
   scripts/bin_to_webp_converter.py
   scripts/port_detector_c3.py
   scripts/port_detector_c3_occlusion.py
+  scripts/prune_unreadable_images.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

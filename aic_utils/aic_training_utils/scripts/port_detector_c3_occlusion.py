@@ -420,6 +420,7 @@ def build_samples_index_occlusion(
                     image_meta=image_meta,
                     prefer_bin=cfg.prefer_bin_for_occlusion,
                 )
+
                 occlusion_ctx, occlusion_err = _build_occlusion_context(
                     width=width,
                     height=height,

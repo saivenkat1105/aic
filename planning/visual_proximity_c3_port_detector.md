@@ -111,9 +111,9 @@ pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detect
   --train-episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes \
   --val-episodes-root /home/user/training_data/visual_motor_policy/testing_data/run_20260506_193523/episodes \
   --output-dir /home/user/training_data/visual_motor_policy/c3_runs/run_001 \
-  --epochs 24 \
-  --batch-size 2 \
-  --eval-batch-size 2 \
+  --epochs 10 \
+  --batch-size 4 \
+  --eval-batch-size 4 \
   --num-workers 8 \
   --lr 2e-4 \
   --weight-decay 1e-4 \
@@ -129,6 +129,47 @@ pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detect
   --output-jsonl /home/user/training_data/visual_motor_policy/c3_runs/run_001/episode_000001_predictions.jsonl \
   --prefer-bin \
   --score-thresh 0.35
+```
+
+### Visualize predictions (recommended)
+
+Use your current training-data root and model directory:
+
+```bash
+cd "$(git rev-parse --show-toplevel)"
+REPO_ROOT="$(pwd)"
+```
+
+```bash
+pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" sample-test-predictions \
+  --episodes-root /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes \
+  --checkpoint /home/user/models/c3/run_001/train/trial_001/best.pt \
+  --num-samples 120 \
+  --output-dir /home/user/models/c3/run_001/sample_test_predictions \
+  --camera all \
+  --seed 7 \
+  --score-thresh 0.95 \
+  --bbox-margin-px 14 \
+  --episode-tail-fraction 1.0 \
+  --save-overlays \
+  --overlay-subdir images \
+  --log-level INFO \
+  --log-every-n 20
+```
+
+This writes:
+- JSONL summary: `/home/user/models/c3/run_001/sample_test_predictions/sample_test_predictions.jsonl`
+- Overlay images: `/home/user/models/c3/run_001/sample_test_predictions/images/`
+
+### Visualize full-episode predictions (optional)
+
+```bash
+pixi run -- python3 "$REPO_ROOT/aic_utils/aic_training_utils/scripts/port_detector_c3.py" predict-episode \
+  --checkpoint /home/user/models/c3/run_001/best.pt \
+  --episode-dir /home/user/training_data/visual_motor_policy/main/run_20260509_080659/episodes/episode_000001 \
+  --output-jsonl /home/user/models/c3/run_001/episode_000001_predictions.jsonl \
+  --score-thresh 0.35 \
+  --log-level INFO
 ```
 
 ## 5. Output Contract for C4 Handoff

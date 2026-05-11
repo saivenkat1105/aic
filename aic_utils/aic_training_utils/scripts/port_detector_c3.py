@@ -28,6 +28,7 @@ import json
 import logging
 import random
 import time
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -82,6 +83,96 @@ def _seed_everything(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
+def _parse_triplet_csv(raw: str, *, name: str) -> tuple[float, float, float]:
+    parts = [x.strip() for x in str(raw).split(",") if x.strip()]
+    if len(parts) != 3:
+        raise ValueError(f"{name} must contain exactly 3 comma-separated values, got: {raw}")
+    try:
+        vals = tuple(float(x) for x in parts)
+    except Exception as exc:
+        raise ValueError(f"{name} contains non-numeric values: {raw}") from exc
+    return vals  # type: ignore[return-value]
+
+
+def _normalized_allocation(total: int, weights: tuple[float, float, float]) -> list[int]:
+    if total <= 0:
+        return [0, 0, 0]
+    wsum = float(weights[0] + weights[1] + weights[2])
+    if wsum <= 0.0:
+        raise ValueError("allocation weights must sum to > 0")
+    raw = [total * (w / wsum) for w in weights]
+    base = [int(np.floor(x)) for x in raw]
+    rem = total - sum(base)
+    if rem > 0:
+        frac_order = sorted(range(3), key=lambda i: (raw[i] - base[i]), reverse=True)
+        for i in frac_order[:rem]:
+            base[i] += 1
+    return base
+
+
+def _sample_episode_frame_indices(
+    *,
+    n_frames: int,
+    max_frames: int,
+    policy: str,
+    quota_split: tuple[float, float, float],
+    bucket_split: tuple[float, float, float],
+    rng: random.Random,
+) -> list[int]:
+    if max_frames <= 0 or n_frames <= max_frames:
+        return list(range(n_frames))
+
+    if policy == "uniform":
+        return sorted(rng.sample(list(range(n_frames)), k=max_frames))
+
+    if policy != "early_quota":
+        raise ValueError(f"Unsupported episode_sampling_policy: {policy}")
+
+    if min(quota_split) < 0.0:
+        raise ValueError(f"episode_quota_split must be non-negative, got {quota_split}")
+    if min(bucket_split) <= 0.0:
+        raise ValueError(f"episode_bucket_split must be >0 per bucket, got {bucket_split}")
+    if abs(sum(bucket_split) - 1.0) > 1e-6:
+        raise ValueError(f"episode_bucket_split must sum to 1.0, got {bucket_split}")
+
+    bucket_sizes = _normalized_allocation(n_frames, bucket_split)
+    b0 = list(range(0, bucket_sizes[0]))
+    b1 = list(range(bucket_sizes[0], bucket_sizes[0] + bucket_sizes[1]))
+    b2 = list(range(bucket_sizes[0] + bucket_sizes[1], n_frames))
+    buckets = [b0, b1, b2]
+
+    targets = _normalized_allocation(max_frames, quota_split)
+    picks: list[list[int]] = [[], [], []]
+
+    for i in range(3):
+        k = min(targets[i], len(buckets[i]))
+        if k > 0:
+            picks[i] = sorted(rng.sample(buckets[i], k=k))
+
+    # Redistribute shortfalls: earlier buckets first, then later buckets.
+    used = sum(len(x) for x in picks)
+    shortfall = max_frames - used
+    if shortfall > 0:
+        for src_order in ([0, 1, 2], [2, 1, 0]):
+            if shortfall <= 0:
+                break
+            for bi in src_order:
+                if shortfall <= 0:
+                    break
+                pool = sorted(set(buckets[bi]) - set(picks[bi]))
+                if not pool:
+                    continue
+                k = min(shortfall, len(pool))
+                extra = rng.sample(pool, k=k)
+                picks[bi].extend(extra)
+                shortfall -= k
+
+    chosen = sorted(picks[0] + picks[1] + picks[2])
+    if len(chosen) > max_frames:
+        chosen = chosen[:max_frames]
+    return chosen
+
+
 def _load_rgb_image(episode_dir: Path, image_meta: dict[str, Any], prefer_bin: bool) -> np.ndarray:
     width = int(image_meta.get("width", 0))
     height = int(image_meta.get("height", 0))
@@ -101,26 +192,33 @@ def _load_rgb_image(episode_dir: Path, image_meta: dict[str, Any], prefer_bin: b
         candidates.append(("debug", episode_dir / str(debug_rel) if debug_rel else None))
         candidates.append(("bin", episode_dir / str(bin_rel) if bin_rel else None))
 
+    errors: list[str] = []
     for source, path in candidates:
         if path is None or not path.exists():
             continue
-        if source == "debug":
-            with Image.open(path) as im:
-                return np.array(im.convert("RGB"), dtype=np.uint8)
-        raw = path.read_bytes()
-        if encoding not in ("rgb8", "bgr8"):
-            raise RuntimeError(f"Unsupported bin encoding: {encoding}")
-        expected = height * step
-        if len(raw) < expected:
-            raise RuntimeError(
-                f"Binary image too short: got={len(raw)} bytes expected>={expected}"
-            )
-        arr = np.frombuffer(raw[: expected], dtype=np.uint8).reshape(height, step)
-        arr = arr[:, : width * 3].reshape(height, width, 3)
-        if encoding == "bgr8":
-            arr = arr[..., ::-1]
-        return arr.copy()
+        try:
+            if source == "debug":
+                with Image.open(path) as im:
+                    return np.array(im.convert("RGB"), dtype=np.uint8)
+            raw = path.read_bytes()
+            if encoding not in ("rgb8", "bgr8"):
+                raise RuntimeError(f"Unsupported bin encoding: {encoding}")
+            expected = height * step
+            if len(raw) < expected:
+                raise RuntimeError(
+                    f"Binary image too short: got={len(raw)} bytes expected>={expected}"
+                )
+            arr = np.frombuffer(raw[: expected], dtype=np.uint8).reshape(height, step)
+            arr = arr[:, : width * 3].reshape(height, width, 3)
+            if encoding == "bgr8":
+                arr = arr[..., ::-1]
+            return arr.copy()
+        except Exception as exc:
+            errors.append(f"{source}:{path}:{exc}")
+            continue
 
+    if errors:
+        raise RuntimeError("Failed to decode image candidates: " + " | ".join(errors))
     raise FileNotFoundError(
         f"No image found for frame image meta (debug={debug_rel}, bin={bin_rel}) under {episode_dir}"
     )
@@ -369,25 +467,34 @@ def build_samples_index(
     bbox_margin_px: float,
     require_both_keypoints: bool,
     episode_tail_fraction: float = 1.0,
+    episode_max_frames: int = 0,
+    episode_sampling_policy: str = "early_quota",
+    episode_quota_split: tuple[float, float, float] = (70.0, 20.0, 10.0),
+    episode_bucket_split: tuple[float, float, float] = (0.5, 0.3, 0.2),
+    episode_sampling_seed: int = 7,
 ) -> list[SampleRecord]:
     if episode_tail_fraction <= 0.0 or episode_tail_fraction > 1.0:
         raise ValueError(
             f"episode_tail_fraction must be in (0.0, 1.0], got {episode_tail_fraction}"
         )
     LOGGER.info(
-        "Indexing samples from %s (bbox_margin_px=%.2f require_both_keypoints=%s episode_tail_fraction=%.3f)",
+        "Indexing samples from %s (bbox_margin_px=%.2f require_both_keypoints=%s episode_tail_fraction=%.3f episode_max_frames=%d episode_sampling_policy=%s)",
         episodes_root,
         bbox_margin_px,
         require_both_keypoints,
         episode_tail_fraction,
+        int(episode_max_frames),
+        episode_sampling_policy,
     )
     samples: list[SampleRecord] = []
     episode_dirs = sorted(
         [p for p in episodes_root.iterdir() if p.is_dir() and p.name.startswith("episode_")]
     )
     LOGGER.info("Found %d episode directories", len(episode_dirs))
+    rng = random.Random(int(episode_sampling_seed))
     total_frames_seen = 0
     total_frames_used = 0
+    total_frames_after_subsampling = 0
     for episode_idx, episode_dir in enumerate(episode_dirs, start=1):
         frames_path = episode_dir / "frames.jsonl"
         if not frames_path.is_file():
@@ -401,12 +508,53 @@ def build_samples_index(
                 frames.append(json.loads(line))
         if len(frames) == 0:
             continue
-        total_frames_seen += len(frames)
+        original_episode_frames_n = len(frames)
+        total_frames_seen += original_episode_frames_n
         if episode_tail_fraction < 1.0:
             keep_n = max(1, int(np.ceil(len(frames) * episode_tail_fraction)))
             start_idx = len(frames) - keep_n
             frames = frames[start_idx:]
-        total_frames_used += len(frames)
+        after_tail_n = len(frames)
+        total_frames_used += after_tail_n
+
+        before_subsample_n = after_tail_n
+        picks_by_bucket = [0, 0, 0]
+        bucket_sizes = [0, 0, 0]
+        if int(episode_max_frames) > 0 and len(frames) > int(episode_max_frames):
+            selected_idx = _sample_episode_frame_indices(
+                n_frames=len(frames),
+                max_frames=int(episode_max_frames),
+                policy=str(episode_sampling_policy),
+                quota_split=episode_quota_split,
+                bucket_split=episode_bucket_split,
+                rng=rng,
+            )
+
+            # Stats/logging breakdown for early/mid/late buckets.
+            bucket_sizes = _normalized_allocation(len(frames), episode_bucket_split)
+            b0_end = bucket_sizes[0]
+            b1_end = bucket_sizes[0] + bucket_sizes[1]
+            for idx in selected_idx:
+                if idx < b0_end:
+                    picks_by_bucket[0] += 1
+                elif idx < b1_end:
+                    picks_by_bucket[1] += 1
+                else:
+                    picks_by_bucket[2] += 1
+            frames = [frames[i] for i in selected_idx]
+
+        total_frames_after_subsampling += len(frames)
+        # if int(episode_max_frames) > 0:
+        #     LOGGER.info(
+        #         "Episode %s frame sampling: original=%d after_tail=%d selected=%d bucket_sizes=%s bucket_picks=%s",
+        #         episode_dir.name,
+        #         original_episode_frames_n,
+        #         after_tail_n,
+        #         len(frames),
+        #         bucket_sizes,
+        #         picks_by_bucket,
+        #         )
+
         for frame in frames:
             training_gt = frame.get("training_gt", {})
             all_ports_gt = training_gt.get("all_ports_gt_base", [])
@@ -461,21 +609,25 @@ def build_samples_index(
                 )
         if episode_idx % 50 == 0:
             LOGGER.info(
-                "Indexed %d/%d episodes; accumulated samples=%d frames_used=%d/%d",
+                "Indexed %d/%d episodes; accumulated samples=%d frames_used=%d/%d frames_after_subsampling=%d",
                 episode_idx,
                 len(episode_dirs),
                 len(samples),
                 total_frames_used,
                 total_frames_seen,
+                total_frames_after_subsampling,
             )
     total_instances = sum(len(s.instances) for s in samples)
+    reduction_ratio = (1.0 - (float(total_frames_after_subsampling) / float(total_frames_used))) if total_frames_used > 0 else 0.0
     LOGGER.info(
-        "Finished indexing: samples=%d total_port_instances=%d avg_instances_per_sample=%.3f frames_used=%d/%d",
+        "Finished indexing: samples=%d total_port_instances=%d avg_instances_per_sample=%.3f frames_used=%d/%d frames_after_subsampling=%d reduction_ratio=%.3f",
         len(samples),
         total_instances,
         (float(total_instances) / float(len(samples))) if samples else 0.0,
         total_frames_used,
         total_frames_seen,
+        total_frames_after_subsampling,
+        reduction_ratio,
     )
     return samples
 
@@ -736,6 +888,86 @@ def _safe_cli_args(args: argparse.Namespace) -> dict[str, Any]:
     return clean
 
 
+def _resolve_run_args_dir(args: argparse.Namespace) -> Path:
+    # Prefer explicit output locations first.
+    out_dir = getattr(args, "output_dir", "")
+    if isinstance(out_dir, str) and out_dir.strip():
+        return Path(out_dir)
+
+    out_jsonl = getattr(args, "output_jsonl", "")
+    if isinstance(out_jsonl, str) and out_jsonl.strip():
+        return Path(out_jsonl).expanduser().resolve().parent
+
+    # Fallbacks for commands without output-dir style args.
+    episodes_root = getattr(args, "episodes_root", "")
+    if isinstance(episodes_root, str) and episodes_root.strip():
+        return Path(episodes_root)
+
+    episode_dir = getattr(args, "episode_dir", "")
+    if isinstance(episode_dir, str) and episode_dir.strip():
+        return Path(episode_dir)
+
+    return Path.cwd()
+
+
+def _write_run_args_json(args: argparse.Namespace) -> Path | None:
+    try:
+        target_dir = _resolve_run_args_dir(args)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        fname = f"{args.cmd}_run_args_{ts}.json"
+        out = target_dir / fname
+        payload = {
+            "cmd": str(args.cmd),
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "args": _safe_cli_args(args),
+        }
+        out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        return out
+    except Exception as exc:
+        LOGGER.warning("Failed to write run args JSON: %s", exc)
+        return None
+
+
+
+def _sample_has_any_image_asset(sample: SampleRecord) -> bool:
+    meta = sample.image_meta if isinstance(sample.image_meta, dict) else {}
+    debug_rel = meta.get("path")
+    bin_rel = meta.get("bin_path")
+    if debug_rel and (sample.episode_dir / str(debug_rel)).exists():
+        return True
+    if bin_rel and (sample.episode_dir / str(bin_rel)).exists():
+        return True
+    return False
+
+
+def _filter_samples_missing_assets(
+    *,
+    samples: list[SampleRecord],
+    context: str,
+) -> tuple[list[SampleRecord], int]:
+    kept: list[SampleRecord] = []
+    skipped = 0
+    for sample in samples:
+        if _sample_has_any_image_asset(sample):
+            kept.append(sample)
+            continue
+        skipped += 1
+        if skipped <= 5:
+            meta = sample.image_meta if isinstance(sample.image_meta, dict) else {}
+            LOGGER.warning(
+                "%s skipping sample with missing assets episode=%s frame=%d cam=%s debug=%s bin=%s",
+                context,
+                sample.episode_id,
+                sample.frame_idx,
+                sample.camera_name,
+                meta.get("path", ""),
+                meta.get("bin_path", ""),
+            )
+    if skipped > 0:
+        LOGGER.warning("%s skipped samples with missing assets: %d", context, skipped)
+    return kept, skipped
+
 def run_inspect(args: argparse.Namespace) -> None:
     LOGGER.info("Running inspect on episodes_root=%s", args.episodes_root)
     episodes_root = Path(args.episodes_root)
@@ -782,11 +1014,24 @@ def run_train(args: argparse.Namespace) -> None:
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    quota_split = _parse_triplet_csv(args.episode_quota_split, name="episode_quota_split")
+    if abs(sum(quota_split) - 100.0) > 1e-6:
+        raise ValueError(f"episode_quota_split must sum to 100, got {quota_split}")
+    bucket_split = _parse_triplet_csv(args.episode_bucket_split, name="episode_bucket_split")
+    if abs(sum(bucket_split) - 1.0) > 1e-6:
+        raise ValueError(f"episode_bucket_split must sum to 1.0, got {bucket_split}")
+    sampling_seed = args.seed if int(args.episode_sampling_seed) < 0 else int(args.episode_sampling_seed)
+
     all_train_samples = build_samples_index(
         episodes_root=train_root,
         bbox_margin_px=args.bbox_margin_px,
         require_both_keypoints=args.require_both_keypoints,
         episode_tail_fraction=args.episode_tail_fraction,
+        episode_max_frames=int(args.episode_max_frames),
+        episode_sampling_policy=str(args.episode_sampling_policy),
+        episode_quota_split=quota_split,
+        episode_bucket_split=bucket_split,
+        episode_sampling_seed=sampling_seed,
     )
     if len(all_train_samples) == 0:
         raise RuntimeError(f"No samples found in {train_root}")
@@ -803,18 +1048,35 @@ def run_train(args: argparse.Namespace) -> None:
             bbox_margin_px=args.bbox_margin_px,
             require_both_keypoints=args.require_both_keypoints,
             episode_tail_fraction=args.episode_tail_fraction,
+            episode_max_frames=0,
         )
+
+    train_samples, skipped_missing_train = _filter_samples_missing_assets(
+        samples=train_samples,
+        context="train",
+    )
+    val_samples, skipped_missing_val = _filter_samples_missing_assets(
+        samples=val_samples,
+        context="val",
+    )
+
+    if len(train_samples) == 0:
+        raise RuntimeError("No train samples left after filtering missing image assets.")
+    if len(val_samples) == 0:
+        raise RuntimeError("No val samples left after filtering missing image assets.")
 
     if args.max_train_samples > 0:
         train_samples = train_samples[: args.max_train_samples]
     if args.max_val_samples > 0:
         val_samples = val_samples[: args.max_val_samples]
     LOGGER.info(
-        "Using train_samples=%d val_samples=%d batch_size=%d eval_batch_size=%d",
+        "Using train_samples=%d val_samples=%d batch_size=%d eval_batch_size=%d skipped_missing_train=%d skipped_missing_val=%d",
         len(train_samples),
         len(val_samples),
         args.batch_size,
         args.eval_batch_size,
+        skipped_missing_train,
+        skipped_missing_val,
     )
 
     train_ds = PortDataset(train_samples, prefer_bin=args.prefer_bin_for_train)
@@ -919,6 +1181,8 @@ def run_train(args: argparse.Namespace) -> None:
                 "best_val_recall": best_recall,
                 "device": str(device),
                 "amp": use_amp,
+                "skipped_missing_train_samples": int(skipped_missing_train),
+                "skipped_missing_val_samples": int(skipped_missing_val),
             },
             indent=2,
         )
@@ -1614,9 +1878,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Optional separate validation episodes root. If omitted, split train set.",
     )
     p_train.add_argument("--output-dir", required=True)
-    p_train.add_argument("--epochs", type=int, default=24)
-    p_train.add_argument("--batch-size", type=int, default=2)
-    p_train.add_argument("--eval-batch-size", type=int, default=2)
+    p_train.add_argument("--epochs", type=int, default=5)
+    p_train.add_argument("--batch-size", type=int, default=16)
+    p_train.add_argument("--eval-batch-size", type=int, default=16)
     p_train.add_argument("--num-workers", type=int, default=8)
     p_train.add_argument("--lr", type=float, default=2e-4)
     p_train.add_argument("--weight-decay", type=float, default=1e-4)
@@ -1626,13 +1890,41 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p_train.add_argument(
         "--episode-tail-fraction",
         type=float,
-        default=0.5,
+        default=1.0,
         help="Use only the final fraction of frames from each episode during training/validation indexing.",
     )
     p_train.add_argument("--bbox-margin-px", type=float, default=14.0)
     p_train.add_argument("--score-thresh", type=float, default=0.35)
     p_train.add_argument("--match-px", type=float, default=24.0)
     p_train.add_argument("--seed", type=int, default=7)
+    p_train.add_argument(
+        "--episode-max-frames",
+        type=int,
+        default=0,
+        help="Per-episode frame cap after episode-tail filtering. 0 means disabled.",
+    )
+    p_train.add_argument(
+        "--episode-sampling-policy",
+        choices=["uniform", "early_quota"],
+        default="early_quota",
+        help="Per-episode frame subsampling policy when episode-max-frames > 0.",
+    )
+    p_train.add_argument(
+        "--episode-quota-split",
+        default="70,20,10",
+        help="Early/mid/late quota percentages for early_quota policy.",
+    )
+    p_train.add_argument(
+        "--episode-bucket-split",
+        default="0.5,0.3,0.2",
+        help="Early/mid/late timeline bucket fractions; must sum to 1.0.",
+    )
+    p_train.add_argument(
+        "--episode-sampling-seed",
+        type=int,
+        default=-1,
+        help="RNG seed for per-episode frame sampling. -1 means reuse --seed.",
+    )
     p_train.add_argument(
         "--max-train-samples",
         type=int,
@@ -1671,7 +1963,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p_preview.add_argument(
         "--episode-tail-fraction",
         type=float,
-        default=0.5,
+        default=1.0,
         help="Use only the final fraction of frames from each episode when building preview samples.",
     )
     p_preview.add_argument("--keypoint-radius-px", type=int, default=4)
@@ -1740,7 +2032,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Maximum number of predictions kept per image after thresholding.",
     )
     p_sample_test.add_argument("--bbox-margin-px", type=float, default=14.0)
-    p_sample_test.add_argument("--episode-tail-fraction", type=float, default=0.5)
+    p_sample_test.add_argument("--episode-tail-fraction", type=float, default=1.0)
     p_sample_test.add_argument("--overlay-subdir", default="images")
     p_sample_test.add_argument("--save-overlays", action="store_true")
     p_sample_test.add_argument("--include-empty-gt", action="store_true")
@@ -1763,6 +2055,9 @@ def main() -> None:
     LOGGER.debug("Parsed args=%s", _safe_cli_args(args))
     if hasattr(args, "val_episodes_root"):
         args.val_episodes_root = args.val_episodes_root or ""
+    run_args_path = _write_run_args_json(args)
+    if run_args_path is not None:
+        LOGGER.info("Saved run args: %s", run_args_path)
     args.func(args)
 
 
